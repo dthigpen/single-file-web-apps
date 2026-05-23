@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reference App Example</title>
+    <style>
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background-color: #f7f7f7;
+    color: #222;
+    line-height: 1.4;
+    padding: 12px;
+}
+
+.card {
+    background: #ffffff;
+    border: 1px solid #dddddd;
+    border-radius: 4px;
+    padding: 12px;
+    margin-bottom: 12px;
+}
+
+h1 { font-size: 1.4rem; margin-bottom: 4px; }
+h2 { font-size: 1.1rem; margin-bottom: 8px; color: #444; }
+p { font-size: 0.9rem; margin-bottom: 8px; color: #666; }
+
+input[type="text"] {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 1rem;
+    margin-bottom: 8px;
+}
+
+button {
+    background-color: #222222;
+    color: #ffffff;
+    border: none;
+    padding: 8px 12px;
+    font-size: 0.9rem;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+button:active {
+    background-color: #555555;
+}
+
+.btn-secondary {
+    background-color: #e0e0e0;
+    color: #333333;
+}
+
+.btn-secondary:active {
+    background-color: #cccccc;
+}
+        
+        /* App-specific style additions */
+        .todo-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 6px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .todo-item:last-child { border-bottom: none; }
+        .todo-text { font-size: 1rem; }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <h1>Example Task Utility</h1>
+        <p>Demonstrates single-file compilation, shared assets, and local data persistence.</p>
+    </div>
+
+    <div class="card">
+        <h2>Add Task</h2>
+        <input type="text" id="taskInput" placeholder="Enter task name...">
+        <button onclick="addNewTask()">Add Entry</button>
+    </div>
+
+    <div class="card">
+        <h2>Active Tasks</h2>
+        <div id="taskList"></div>
+    </div>
+
+    <div class="card">
+        <h2>Backup & Restore</h2>
+        <p>Save state payload down to device file storage, or import an active backup string.</p>
+        <button onclick="handleBackup()">Export Data</button>
+        <div style="margin-top: 12px;">
+            <input type="file" id="importPicker" accept=".json">
+        </div>
+    </div>
+
+    <script>
+/**
+ * Generates a dynamic file download directly in the browser environment.
+ * @param {Object} dataObject - The state or configuration object to save.
+ * @param {string} filename - The desired target name for the downloaded file.
+ */
+function exportAppState(dataObject, filename) {
+    const jsonString = JSON.stringify(dataObject, null, 2);
+    const blob = new Blob([jsonString], { type: "application/json" });
+    const link = document.createElement("a");
+    
+    link.href = URL.createObjectURL(blob);
+    link.download = filename;
+    
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(link.href);
+}
+
+/**
+ * Binds an event listener to a file input element to read raw text content.
+ * @param {string} inputId - The HTML id string of the target input[type="file"].
+ * @param {function} callback - Execution block passing the successfully parsed object.
+ */
+function initializeAppImporter(inputId, callback) {
+    const filePicker = document.getElementById(inputId);
+    if (!filePicker) return;
+
+    filePicker.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function(event) {
+            try {
+                const parsedData = JSON.parse(event.target.result);
+                callback(parsedData);
+            } catch (err) {
+                alert("Failed to parse file data: " + err.message);
+            }
+        };
+        reader.readAsText(file);
+    });
+}
+// App State Core
+let todoState = {
+    items: [
+        { id: 1, text: "Verify preprocessor script compilation" },
+        { id: 2, text: "Test Blob execution on target handset" }
+    ]
+};
+
+// Render engine loop
+function renderTasks() {
+    const container = document.getElementById('taskList');
+    container.innerHTML = '';
+
+    if (todoState.items.length === 0) {
+        container.innerHTML = '<p style="font-style: italic; color: #888;">No tasks listed.</p>';
+        return;
+    }
+
+    todoState.items.forEach(item => {
+        const row = document.createElement('div');
+        row.className = 'todo-item';
+        
+        const label = document.createElement('span');
+        label.className = 'todo-text';
+        label.innerText = item.text;
+        
+        const deleteBtn = document.createElement('button');
+        deleteBtn.className = 'btn-secondary';
+        deleteBtn.innerText = 'Remove';
+        deleteBtn.style.padding = '4px 8px';
+        deleteBtn.onclick = () => removeTask(item.id);
+
+        row.appendChild(label);
+        row.appendChild(deleteBtn);
+        container.appendChild(row);
+    });
+}
+
+function addNewTask() {
+    const input = document.getElementById('taskInput');
+    const text = input.value.trim();
+    if (!text) return;
+
+    const newItem = {
+        id: Date.now(),
+        text: text
+    };
+
+    todoState.items.push(newItem);
+    input.value = '';
+    renderTasks();
+}
+
+function removeTask(id) {
+    todoState.items = todoState.items.filter(item => item.id !== id);
+    renderTasks();
+}
+
+// IO Integrations using shared/utils.js abstractions
+function handleBackup() {
+    exportAppState(todoState, "example_app_backup.json");
+}
+
+// Wire up the upload listener on application init
+document.addEventListener('DOMContentLoaded', () => {
+    renderTasks();
+    
+    initializeAppImporter('importPicker', (parsedJSON) => {
+        if (parsedJSON && Array.isArray(parsedJSON.items)) {
+            todoState = parsedJSON;
+            renderTasks();
+        } else {
+            alert("Invalid backup schema detected.");
+        }
+    });
+});
+    </script>
+</body>
+</html>

@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reference App Example</title>
+    <style>
+        /* {{include: shared/theme.css}} */
+        
+        /* App-specific style additions */
+        .todo-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 6px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .todo-item:last-child { border-bottom: none; }
+        .todo-text { font-size: 1rem; }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <h1>Example Task Utility</h1>
+        <p>Demonstrates single-file compilation, shared assets, and local data persistence.</p>
+    </div>
+
+    <div class="card">
+        <h2>Add Task</h2>
+        <input type="text" id="taskInput" placeholder="Enter task name...">
+        <button onclick="addNewTask()">Add Entry</button>
+    </div>
+
+    <div class="card">
+        <h2>Active Tasks</h2>
+        <div id="taskList"></div>
+    </div>
+
+    <div class="card">
+        <h2>Backup & Restore</h2>
+        <p>Save state payload down to device file storage, or import an active backup string.</p>
+        <button onclick="handleBackup()">Export Data</button>
+        <div style="margin-top: 12px;">
+            <input type="file" id="importPicker" accept=".json">
+        </div>
+    </div>
+
+    <script>
+        /* {{include: shared/utils.js}} */
+        /* {{include: example_app/app.js}} */
+    </script>
+</body>
+</html>
