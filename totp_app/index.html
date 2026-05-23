@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Vault</title>
+    <style>
+        /* {{include: shared/theme.css}} */
+
+        body { padding: 4px; background-color: #ffffff; }
+        header {
+            border-bottom: 2px solid #000000; padding-bottom: 4px; margin-bottom: 8px;
+            display: flex; justify-content: space-between; align-items: flex-end;
+        }
+        h1 { font-size: 16px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; }
+        
+        .timer-text {
+            font-size: 12px; font-weight: bold; font-family: monospace;
+            background: #e0e0e0; padding: 1px 4px; border-radius: 2px;
+        }
+        .code-list { display: flex; flex-direction: column; gap: 6px; }
+        .code-card { border: 1px solid #b0b0b0; border-radius: 3px; padding: 6px 8px; background-color: #fafafa; }
+        .code-card:focus-within { border: 2px solid #000000; background-color: #f0f0f0; outline: none; }
+        
+        .demo-badge {
+            font-size: 9px; background: #ff3b30; color: #ffffff; padding: 1px 3px;
+            border-radius: 2px; font-weight: bold; text-transform: uppercase; vertical-align: middle;
+        }
+        .account-label { font-size: 11px; color: #555555; font-weight: bold; text-transform: uppercase; word-break: break-all; margin-bottom: 1px; }
+        .token-display { font-family: monospace; font-size: 26px; font-weight: bold; letter-spacing: 1px; color: #000000; }
+        
+        .onboarding-box {
+            background: #fff9e6; border: 1px solid #ffcc00; border-radius: 4px;
+            padding: 8px; margin-bottom: 10px; font-size: 12px; line-height: 1.4;
+        }
+        .onboarding-box h3 { font-size: 12px; text-transform: uppercase; margin-bottom: 4px; color: #8a6d3b; }
+        .onboarding-box ol { padding-left: 16px; margin-top: 4px; }
+
+        footer { margin-top: 12px; padding-top: 6px; border-top: 1px dashed #b0b0b0; text-align: center; }
+        .btn {
+            display: inline-block; background: #ffffff; color: #000000; border: 1.5px solid #000000;
+            padding: 6px 12px; font-size: 12px; font-weight: bold; text-transform: uppercase; border-radius: 3px;
+            cursor: pointer;
+        }
+        .btn:focus { background: #000000; color: #ffffff; outline: none; }
+        
+        #setup-pane { display: none; border-top: 2px solid #000000; margin-top: 15px; padding-top: 10px; }
+        #setup-pane h2 { font-size: 14px; text-transform: uppercase; margin-bottom: 8px; }
+        .form-group { margin-bottom: 8px; }
+        .form-group label { display: block; font-size: 11px; font-weight: bold; margin-bottom: 2px; }
+        .form-group textarea, .form-group input { width: 100%; padding: 4px; font-family: monospace; font-size: 12px; border: 1px solid #000000; }
+        
+        .output-box {
+            background: #eeeeee; padding: 6px; font-size: 10px; word-break: break-all;
+            border: 1px dashed #555555; margin-top: 4px; user-select: all; font-family: monospace;
+        }
+        .step-instruction { font-size: 11px; color: #555555; margin-top: 2px; margin-bottom: 6px; font-style: italic; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Vault</h1>
+        <div class="timer-text" id="global-timer">30s</div>
+    </header>
+
+    <div id="onboarding-container" style="display: none;">
+        <div class="onboarding-box">
+            <h3>⚠️ Running in Demo Mode</h3>
+            No production keys found in local storage.
+            <ol>
+                <li>Click <strong>Manage Vault</strong> below to open provisioning tools.</li>
+                <li>Import an encrypted payload file directly or generate a new database configuration template.</li>
+            </ol>
+        </div>
+    </div>
+
+    <main class="code-list" id="vault-list"></main>
+
+    <footer>
+        <button class="btn" id="toggle-setup-btn" tabindex="0">Manage Vault</button>
+    </footer>
+
+    <section id="setup-pane">
+        <h2>Vault Provisioner</h2>
+        
+        <!-- Direct File-Based Upload Area -->
+        <div class="form-group" style="background: #f5f5f5; padding: 6px; border: 1px solid #ddd; margin-bottom: 12px;">
+            <label>💾 Import Encoded Vault File</label>
+            <div class="step-instruction">Select your encrypted backup file. To protect against lockouts, you must verify the password before it gets committed.</div>
+            <input type="file" id="import-file-input" accept=".txt,.json">
+            
+            <div style="margin-top: 6px;">
+                <label style="font-size: 10px; color: #333;">Verify Passphrase for Selected File:</label>
+                <input type="password" id="import-file-pass" style="width: 100%; margin-bottom: 4px;">
+            </div>
+            <button class="btn" id="file-load-btn" style="padding: 4px 8px; font-size: 11px; margin-top: 4px;">Verify & Import</button>
+        </div>
+
+        <!-- Generation Form Workspace -->
+        <div class="form-group">
+            <label>1. Raw Credentials (Label,Secret,Period)</label>
+            <div class="step-instruction">Format: One entry per line. Example: <code>GitHub:user,JBSWY3DPEHPK3PXP,30</code></div>
+            <textarea id="setup-raw" rows="5" placeholder="GitHub:personal,JBSWY3DPEHPK3PXP&#10;Nextcloud:admin,ORXW233SMVZA"></textarea>
+        </div>
+        
+        <div class="form-group">
+            <label>2. Choose Master Passphrase</label>
+            <input type="password" id="setup-pass" placeholder="Enter new passphrase">
+        </div>
+
+        <div class="form-group">
+            <label>3. Confirm Master Passphrase</label>
+            <input type="password" id="setup-pass-confirm" placeholder="Repeat passphrase to verify">
+        </div>
+        
+        <button class="btn" id="encrypt-trigger-btn">Compile & Save to Storage</button>
+        
+        <div id="setup-output-container" style="display:none; margin-top: 12px; border-top: 1px solid #000; padding-top: 8px;">
+            <label style="display:block; font-size:11px; font-weight:bold;">4. Secured Backup Output</label>
+            <div class="step-instruction">Data successfully saved to browser local storage. Optional text fallback block:</div>
+            <div class="output-box" id="setup-output"></div>
+        </div>
+    </section>
+
+    <script>
+        /* {{include: shared/utils.js}} */
+        /* {{include: totp_app/app.js}} */
+    </script>
+</body>
+</html>
