@@ -2,6 +2,8 @@
 
 A collection of self-contained, offline-first web utilities developed as modular projects and compiled into isolated, single-file HTML implementations. These tools require no network access, no backend infrastructure, and no external runtime environments beyond a standard web browser engine.
 
+Just want to try it out? Jump to [Usage](#user-guide-running-the-apps)
+
 ## Overview
 
 A single-file web app bundles all its presentation logic (HTML), layout styling (CSS), structural assets (such as inlined base64 graphic data), and behavior workflows (JavaScript) into one solitary `.html` file. 
@@ -52,8 +54,11 @@ To maintain clean separation of concerns without manually copying utility code a
 
 Because the distribution payloads inside the `/dist` directory are already fully compiled and completely unified, consumers do not need to install Python, run build scripts, or configure local developer setups to use them.
 
+**Want to learn more about each app?**
+Navigate to its own README.md such as [totp_app/README.md](totp_app/README.md)
+
 ### Desktop & Standard Mobile Usage
-1. Enter the [/dist](https://github.com/dthigpen/single-file-apps/dist) directory of this repository.
+1. Enter the [/dist](/dist) directory of this repository.
 2. Download any of the `.html` app files that you want.
 3. Double-click or open any compiled `.html` application file (e.g., `dist/example_app.html`) directly inside a modern web browser.
 4. Bookmarking the file URL (`file:///path/to/dist/app.html`) inside your browser provides permanent local access.

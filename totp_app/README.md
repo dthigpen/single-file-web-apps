@@ -4,6 +4,7 @@ A private, distraction-free, local-first 2FA authentication hub designed to oper
 
 The app features zero tracking, requires no external server network connections, and operates out of an encrypted browser database footprint to guarantee zero unencrypted credentials ever sit at rest on local device storage.
 
+![TOTP App Interface](/docs/img/totp-app-screenshot.png)
 ---
 
 ## Security Architecture
