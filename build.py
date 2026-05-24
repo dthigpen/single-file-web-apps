@@ -58,13 +58,15 @@ def get_all_app_directories():
 
 def main():
     # Force working directory to be the directory containing this script
-    os.chdir(os.path.dirname(os.path.abspath(__file__)))
-
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    apps_dir = os.path.join(script_dir, 'src/')
+    dist_dir = os.path.join(script_dir, 'dist/')
+    os.chdir(apps_dir)
     # Case 1: Specific app name provided as argument (e.g., `python3 build.py totp_app`)
     if len(sys.argv) > 1:
         target_app = sys.argv[1].rstrip('/')
         template = os.path.join(target_app, 'index.html')
-        output = os.path.join('dist', f"{target_app}.html")
+        output = os.path.join(dist_dir, f"{target_app}.html")
         compile_html_file(template, output)
         
     # Case 2: No arguments, discover and build all apps automatically
@@ -79,7 +81,7 @@ def main():
         print(f"Found {len(apps)} apps to compile: {', '.join(apps)}\n" + "-"*40)
         for app in apps:
             template = os.path.join(app, 'index.html')
-            output = os.path.join('dist', f"{app}.html")
+            output = os.path.join(dist_dir, f"{app}.html")
             compile_html_file(template, output)
 
 if __name__ == '__main__':
