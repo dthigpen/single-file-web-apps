@@ -103,6 +103,8 @@ function triggerLockscreenUI(isFresh = false) {
     const lockscreen = document.createElement('app-lockscreen');
     lockscreen.setAttribute('title', isFresh ? 'Create Master Passphrase' : 'Database Locked');
     lockscreen.setAttribute('desc', isFresh ? 'Set a password to encrypt your local app database.' : 'Enter your password to decrypt your data.');
+    lock.setAttribute('app-name', 'Task List');
+    lock.setAttribute('custom-desc', 'Tasks will remain hidden until decrypted.');
     if (isFresh) lockscreen.setAttribute('fresh-run', '');
 
     lockscreen.addEventListener('app-unlock', async (e) => {

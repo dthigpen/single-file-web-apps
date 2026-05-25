@@ -63,12 +63,12 @@ button:active {
     background-color: #cccccc;
 }
 
-        body { padding: 4px; background-color: #ffffff; }
+        body { padding: 4px; background-color: #ffffff; font-family: sans-serif; }
         header {
             border-bottom: 2px solid #000000; padding-bottom: 4px; margin-bottom: 8px;
             display: flex; justify-content: space-between; align-items: flex-end;
         }
-        h1 { font-size: 16px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; }
+        h1 { font-size: 16px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; margin: 0; }
         
         .timer-text {
             font-size: 12px; font-weight: bold; font-family: monospace;
@@ -89,8 +89,8 @@ button:active {
             background: #fff9e6; border: 1px solid #ffcc00; border-radius: 4px;
             padding: 8px; margin-bottom: 10px; font-size: 12px; line-height: 1.4;
         }
-        .onboarding-box h3 { font-size: 12px; text-transform: uppercase; margin-bottom: 4px; color: #8a6d3b; }
-        .onboarding-box ol { padding-left: 16px; margin-top: 4px; }
+        .onboarding-box h3 { font-size: 12px; text-transform: uppercase; margin-bottom: 4px; color: #8a6d3b; margin-top: 0; }
+        .onboarding-box ol { padding-left: 16px; margin-top: 4px; margin-bottom: 0; }
 
         footer { margin-top: 12px; padding-top: 6px; border-top: 1px dashed #b0b0b0; text-align: center; }
         .btn {
@@ -101,129 +101,56 @@ button:active {
         .btn:focus { background: #000000; color: #ffffff; outline: none; }
         
         #setup-pane { display: none; border-top: 2px solid #000000; margin-top: 15px; padding-top: 10px; }
-        #setup-pane h2 { font-size: 14px; text-transform: uppercase; margin-bottom: 8px; }
+        #setup-pane h2 { font-size: 14px; text-transform: uppercase; margin-bottom: 8px; margin-top: 0; }
         .form-group { margin-bottom: 8px; }
         .form-group label { display: block; font-size: 11px; font-weight: bold; margin-bottom: 2px; }
-        .form-group textarea, .form-group input { width: 100%; padding: 4px; font-family: monospace; font-size: 12px; border: 1px solid #000000; }
-        
-        .output-box {
-            background: #eeeeee; padding: 6px; font-size: 10px; word-break: break-all;
-            border: 1px dashed #555555; margin-top: 4px; user-select: all; font-family: monospace;
-        }
+        .form-group textarea, .form-group input { width: 100%; padding: 4px; font-family: monospace; font-size: 12px; border: 1px solid #000000; box-sizing: border-box; }
         .step-instruction { font-size: 11px; color: #555555; margin-top: 2px; margin-bottom: 6px; font-style: italic; }
     </style>
 </head>
 <body>
 
-    <header>
-        <h1>Vault</h1>
-        <div class="timer-text" id="global-timer">30s</div>
-    </header>
+    <div id="appWorkspace" style="display: none;">
+        <header>
+            <h1>Vault</h1>
+            <!-- <div class="timer-text" id="global-timer">30s</div> -->
+        </header>
 
-    <div id="onboarding-container" style="display: none;">
-        <div class="onboarding-box">
-            <h3>⚠️ Running in Demo Mode</h3>
-            No production keys found in local storage.
-            <ol>
-                <li>Click <strong>Manage Vault</strong> below to open provisioning tools.</li>
-                <li>Import an encrypted payload file directly or generate a new database configuration template.</li>
-            </ol>
+        <div id="onboarding-container" style="display: none;">
+            <div class="onboarding-box">
+                <h3>️ Running in Demo Mode</h3>
+                No production keys found in local storage.
+                <ol>
+                    <li>Click <strong>Manage Vault</strong> below to open provisioning tools.</li>
+                    <li>Import your existing data profile via file or enter credentials manually below.</li>
+                </ol>
+            </div>
         </div>
+
+        <main class="code-list" id="vault-list"></main>
+
+        <footer>
+            <button class="btn" id="toggle-setup-btn" tabindex="0">Manage Vault</button>
+        </footer>
+
+        <section id="setup-pane">
+            <app-data-io id="dataManager" app-id="totp-vault" encrypted></app-data-io>
+            
+            <hr style="margin: 20px 0; border: 0; border-top: 2px solid #000;">
+
+            <h2>Manual Account Manager</h2>
+            
+            <div class="form-group">
+                <label>1. Raw Credentials (Label,Secret,Period)</label>
+                <div class="step-instruction">Format: One entry per line. Example: <code>GitHub:user,JBSWY3DPEHPK3PXP,30</code></div>
+                <textarea id="setup-raw" rows="5" placeholder="GitHub:personal,JBSWY3DPEHPK3PXP&#10;Nextcloud:admin,ORXW233SMVZA"></textarea>
+            </div>
+            
+            <button class="btn" id="encrypt-trigger-btn">Overwrite & Save Vault</button>
+        </section>
     </div>
 
-    <main class="code-list" id="vault-list"></main>
-
-    <footer>
-        <button class="btn" id="toggle-setup-btn" tabindex="0">Manage Vault</button>
-    </footer>
-
-    <section id="setup-pane">
-        <h2>Vault Provisioner</h2>
-        
-        <!-- Direct File-Based Upload Area -->
-        <div class="form-group" style="background: #f5f5f5; padding: 6px; border: 1px solid #ddd; margin-bottom: 12px;">
-            <label>💾 Import Encoded Vault File</label>
-            <div class="step-instruction">Select your encrypted backup file. To protect against lockouts, you must verify the password before it gets committed.</div>
-            <input type="file" id="import-file-input" accept=".txt,.json">
-            
-            <div style="margin-top: 6px;">
-                <label style="font-size: 10px; color: #333;">Verify Passphrase for Selected File:</label>
-                <input type="password" id="import-file-pass" style="width: 100%; margin-bottom: 4px;">
-            </div>
-            <button class="btn" id="file-load-btn" style="padding: 4px 8px; font-size: 11px; margin-top: 4px;">Verify & Import</button>
-        </div>
-
-        <!-- Generation Form Workspace -->
-        <div class="form-group">
-            <label>1. Raw Credentials (Label,Secret,Period)</label>
-            <div class="step-instruction">Format: One entry per line. Example: <code>GitHub:user,JBSWY3DPEHPK3PXP,30</code></div>
-            <textarea id="setup-raw" rows="5" placeholder="GitHub:personal,JBSWY3DPEHPK3PXP&#10;Nextcloud:admin,ORXW233SMVZA"></textarea>
-        </div>
-        
-        <div class="form-group">
-            <label>2. Choose Master Passphrase</label>
-            <input type="password" id="setup-pass" placeholder="Enter new passphrase">
-        </div>
-
-        <div class="form-group">
-            <label>3. Confirm Master Passphrase</label>
-            <input type="password" id="setup-pass-confirm" placeholder="Repeat passphrase to verify">
-        </div>
-        
-        <button class="btn" id="encrypt-trigger-btn">Compile & Save to Storage</button>
-        
-        <div id="setup-output-container" style="display:none; margin-top: 12px; border-top: 1px solid #000; padding-top: 8px;">
-            <label style="display:block; font-size:11px; font-weight:bold;">4. Secured Backup Output</label>
-            <div class="step-instruction">Data successfully saved to browser local storage. Optional text fallback block:</div>
-            <div class="output-box" id="setup-output"></div>
-        </div>
-    </section>
-
     <script>
-/**
- * Generates a dynamic file download directly in the browser environment.
- * @param {Object} dataObject - The state or configuration object to save.
- * @param {string} filename - The desired target name for the downloaded file.
- */
-function exportAppState(dataObject, filename) {
-    const jsonString = JSON.stringify(dataObject, null, 2);
-    const blob = new Blob([jsonString], { type: "application/json" });
-    const link = document.createElement("a");
-    
-    link.href = URL.createObjectURL(blob);
-    link.download = filename;
-    
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(link.href);
-}
-
-/**
- * Binds an event listener to a file input element to read raw text content.
- * @param {string} inputId - The HTML id string of the target input[type="file"].
- * @param {function} callback - Execution block passing the successfully parsed object.
- */
-function initializeAppImporter(inputId, callback) {
-    const filePicker = document.getElementById(inputId);
-    if (!filePicker) return;
-
-    filePicker.addEventListener('change', function(e) {
-        const file = e.target.files[0];
-        if (!file) return;
-
-        const reader = new FileReader();
-        reader.onload = function(event) {
-            try {
-                const parsedData = JSON.parse(event.target.result);
-                callback(parsedData);
-            } catch (err) {
-                alert("Failed to parse file data: " + err.message);
-            }
-        };
-        reader.readAsText(file);
-    });
-}
 
 /**
  * Normalizes a Base32 string into a standard byte buffer.
@@ -248,67 +175,6 @@ function base32ToBuf(str) {
         }
     }
     return buffer;
-}
-
-/**
- * Derives a deterministic cryptographic key from a pass string via PBKDF2.
- */
-async function deriveCryptoKey(password, salt) {
-    const encoder = new TextEncoder();
-    const baseKey = await window.crypto.subtle.importKey(
-        "raw", encoder.encode(password), "PBKDF2", false, ["deriveKey"]
-    );
-    return window.crypto.subtle.deriveKey(
-        { name: "PBKDF2", salt: salt, iterations: 100000, hash: "SHA-256" },
-        baseKey,
-        { name: "AES-GCM", length: 256 },
-        false,
-        ["encrypt", "decrypt"]
-    );
-}
-
-/**
- * Encrypts a plaintext string with AES-GCM 256.
- */
-async function encryptPayload(plainText, password) {
-    const encoder = new TextEncoder();
-    const salt = window.crypto.getRandomValues(new Uint8Array(16));
-    const iv = window.crypto.getRandomValues(new Uint8Array(12));
-    const key = await deriveCryptoKey(password, salt);
-    
-    const cipherBuf = await window.crypto.subtle.encrypt(
-        { name: "AES-GCM", iv: iv },
-        key,
-        encoder.encode(plainText)
-    );
-
-    const combined = new Uint8Array(salt.length + iv.length + cipherBuf.byteLength);
-    combined.set(salt, 0);
-    combined.set(iv, salt.length);
-    combined.set(new Uint8Array(cipherBuf), salt.length + iv.length);
-
-    return btoa(String.fromCharCode.apply(null, combined));
-}
-
-/**
- * Decrypts a base64 encrypted payload with AES-GCM 256.
- */
-async function decryptPayload(cipherTextB64, password) {
-    const binary = atob(cipherTextB64);
-    const combined = new Uint8Array(binary.length).map((_, i) => binary.charCodeAt(i));
-    
-    const salt = combined.slice(0, 16);
-    const iv = combined.slice(16, 28);
-    const cipherBuf = combined.slice(28);
-
-    const key = await deriveCryptoKey(password, salt);
-    const plainBuf = await window.crypto.subtle.decrypt(
-        { name: "AES-GCM", iv: iv },
-        key,
-        cipherBuf
-    );
-
-    return new TextDecoder().decode(plainBuf);
 }
 
 /**
@@ -350,32 +216,348 @@ async function calculateTOTP(secretB32, period = 30) {
         return "ERR GEN";
     }
 }
-// totp_app/app.js
+/**
+ * Derives a deterministic cryptographic key from a password string via PBKDF2.
+ */
+async function deriveCryptoKey(password, saltBuffer) {
+    const encoder = new TextEncoder();
+    const baseKey = await window.crypto.subtle.importKey(
+        "raw", encoder.encode(password), "PBKDF2", false, ["deriveKey"]
+    );
+    return window.crypto.subtle.deriveKey(
+        { name: "PBKDF2", salt: saltBuffer, iterations: 100000, hash: "SHA-256" },
+        baseKey,
+        { name: "AES-GCM", length: 256 },
+        false,
+        ["encrypt", "decrypt"]
+    );
+}
 
-const STORAGE_KEY = "vault_encrypted_data";
+/**
+ * Encrypts a plaintext string with AES-GCM 256.
+ * Returns an object matching the schema cryptoMetadata setup.
+ */
+async function encryptPayload(plainText, password) {
+    const encoder = new TextEncoder();
+    const salt = window.crypto.getRandomValues(new Uint8Array(16));
+    const iv = window.crypto.getRandomValues(new Uint8Array(12));
+    const key = await deriveCryptoKey(password, salt);
+    
+    const cipherBuf = await window.crypto.subtle.encrypt(
+        { name: "AES-GCM", iv: iv },
+        key,
+        encoder.encode(plainText)
+    );
+
+    // Convert separate buffers to simple Base64 strings for the JSON envelope
+    return {
+        salt: btoa(String.fromCharCode(...salt)),
+        iv: btoa(String.fromCharCode(...iv)),
+        ciphertext: btoa(String.fromCharCode(...new Uint8Array(cipherBuf)))
+    };
+}
+
+/**
+ * Decrypts individual Base64 parts with AES-GCM 256.
+ */
+async function decryptPayload(ciphertextB64, password, saltB64, ivB64) {
+    const toBuf = (b64) => Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+    
+    const salt = toBuf(saltB64);
+    const iv = toBuf(ivB64);
+    const cipherBuf = toBuf(ciphertextB64);
+
+    const key = await deriveCryptoKey(password, salt);
+    const plainBuf = await window.crypto.subtle.decrypt(
+        { name: "AES-GCM", iv: iv },
+        key,
+        cipherBuf
+    );
+
+    return new TextDecoder().decode(plainBuf);
+}
+class AppLockscreen extends HTMLElement {
+    async connectedCallback() {
+        const appId = this.getAttribute('app-id');
+        const isEncrypted = this.hasAttribute('encrypted');
+        const appName = this.getAttribute('app-name') || 'Application';
+        const customDesc = this.getAttribute('custom-desc');
+        
+        const rawStored = localStorage.getItem(appId);
+        const isFreshRun = !rawStored;
+
+        const title = isFreshRun ? `Create ${appName} Passphrase` : `Unlock ${appName}`;
+        const defaultDesc = isFreshRun 
+            ? `Set a local password to encrypt your storage profile.` 
+            : `Enter your passphrase to decrypt your secure workspace.`;
+        
+        const desc = customDesc || defaultDesc;
+
+        this.innerHTML = `
+            <div class="lockscreen-overlay" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #ffffff; z-index: 9999; display: flex; align-items: center; justify-content: center; padding: 20px; box-sizing: border-box;">
+                <div class="card lockscreen-panel" style="width: 100%; max-width: 400px; border: 2px solid #000; padding: 16px; background: #fff; box-sizing: border-box;">
+                    <h2 style="font-size: 16px; font-weight: bold; text-transform: uppercase; margin-top: 0; margin-bottom: 4px;">${title}</h2>
+                    <p style="font-size: 11px; color: #555; margin-top: 0; margin-bottom: 12px; line-height: 1.4;">${desc}</p>
+                    <input type="password" id="sysPassInput" placeholder="Passphrase..." style="width: 100%; padding: 6px; font-size: 12px; border: 1px solid #000; box-sizing: border-box; margin-bottom: 12px;">
+                    <button id="sysUnlockBtn" class="btn" style="width: 100%; padding: 8px; font-size: 12px;">${isFreshRun ? 'Set Passphrase' : 'Unlock Database'}</button>
+                    <div id="sysLockError" class="lockscreen-error" style="display: none; color: #ff3b30; font-size: 11px; font-weight: bold; margin-top: 8px; text-align: center;">Incorrect passphrase. Try again.</div>
+                    
+                    <!-- Emergency Data Reset Layer (Visible only when a locked database exists) -->
+                    ${!isFreshRun ? `
+                        <div style="margin-top: 16px; border-top: 1px dashed #b0b0b0; padding-top: 12px; text-align: center;">
+                            <button id="sysResetBtn" style="background: transparent; border: none; color: #cc0000; font-size: 10px; font-weight: bold; text-transform: uppercase; cursor: pointer; text-decoration: underline; padding: 4px;">
+                                Forgot Passphrase? Reset App
+                            </button>
+                        </div>
+                    ` : ''}
+                </div>
+            </div>
+        `;
+
+        const input = this.querySelector('#sysPassInput');
+        const unlockBtn = this.querySelector('#sysUnlockBtn');
+        const errorDiv = this.querySelector('#sysLockError');
+
+        input.focus();
+        input.addEventListener('keydown', (e) => { if (e.key === 'Enter') unlockBtn.click(); });
+
+        // --- UNLOCK ROUTINE ---
+        unlockBtn.onclick = async () => {
+            const password = input.value;
+            if (!password) return;
+
+            try {
+                let decryptedPayload = null;
+
+                if (isFreshRun) {
+                    decryptedPayload = null; 
+                } else {
+                    if (isEncrypted) {
+                        const envelope = JSON.parse(rawStored);
+                        const decryptedString = await decryptPayload(
+                            envelope.payload,
+                            password,
+                            envelope.cryptoMetadata.salt,
+                            envelope.cryptoMetadata.iv
+                        );
+                        decryptedPayload = JSON.parse(decryptedString);
+                    } else {
+                        const envelope = JSON.parse(rawStored);
+                        decryptedPayload = envelope.payload;
+                    }
+                }
+
+                this.dispatchEvent(new CustomEvent('app-unlocked-success', {
+                    detail: { password, data: decryptedPayload, isFreshRun }
+                }));
+                
+                this.remove();
+            } catch (err) {
+                errorDiv.style.display = 'block';
+                input.value = '';
+                input.focus();
+            }
+        };
+
+        // --- EMERGENCY RESET ROUTINE ---
+        if (!isFreshRun) {
+            const resetBtn = this.querySelector('#sysResetBtn');
+            resetBtn.onclick = () => {
+                const step1 = confirm(`Are you completely sure you want to reset ${appName}? This will completely purge your encrypted data file from local storage.`);
+                if (step1) {
+                    const step2 = confirm("⚠️ FINAL WARNING: This action is permanent and unrecoverable. Your existing local security keys and tokens will be wiped out completely. Proceed?");
+                    if (step2) {
+                        localStorage.removeItem(appId);
+                        // Reloading drops the user back to a clean state boot cycle
+                        location.reload();
+                    }
+                }
+            };
+        }
+    }
+}
+customElements.define('app-lockscreen', AppLockscreen);
+class AppDataIO extends HTMLElement {
+    connectedCallback() {
+        this.appId = this.getAttribute('app-id');
+        this.version = this.getAttribute('version') || '1.0.0';
+        this.isEncrypted = this.hasAttribute('encrypted');
+
+        this.innerHTML = `
+            <div class="card" style="border: 1px solid #b0b0b0; padding: 8px; background: #fafafa; border-radius: 3px;">
+                <h2 style="font-size: 13px; text-transform: uppercase; margin-top: 0; margin-bottom: 6px;">Data Management</h2>
+                <p style="font-size: 11px; color: #555; margin-top: 0; margin-bottom: 10px; line-height: 1.4;">Save state payload down to device file storage, or import an active backup string.</p>
+                <button id="ioExportBtn" class="btn" style="width: 100%; margin-bottom: 8px; padding: 4px; font-size: 11px;">Export Backup File</button>
+                
+                <div style="margin-top: 8px; border-top: 1px dashed #ccc; padding-top: 8px;">
+                    <label style="display: block; font-size: 11px; font-weight: bold; margin-bottom: 4px;">Import Backup File:</label>
+                    <input type="file" id="ioImportPicker" accept=".json" style="width: 100%; font-size: 11px;">
+                </div>
+
+                <div style="margin-top: 12px; border-top: 1px solid #000; padding-top: 8px;">
+                    <button id="ioResetBtn" class="btn" style="width: 100%; padding: 4px; font-size: 11px; background: #fff5f5; color: #cc0000; border-color: #cc0000;">Reset Application (Wipe Everything)</button>
+                </div>
+            </div>
+        `;
+
+        const exportBtn = this.querySelector('#ioExportBtn');
+        const importPicker = this.querySelector('#ioImportPicker');
+        const resetBtn = this.querySelector('#ioResetBtn');
+
+        // --- EXPORT PIPELINE (Remains unchanged) ---
+        exportBtn.onclick = async () => {
+            const exportEvent = new CustomEvent('app-export-request', {
+                detail: { rawData: null, masterKey: null },
+                cancelable: true
+            });
+            this.dispatchEvent(exportEvent);
+
+            const { rawData, masterKey } = exportEvent.detail;
+            if (!rawData) return;
+
+            const envelope = {
+                appId: this.appId,
+                version: this.version,
+                encrypted: this.isEncrypted,
+                cryptoMetadata: {},
+                payload: ""
+            };
+
+            if (this.isEncrypted && masterKey) {
+                const rawString = JSON.stringify(rawData);
+                const cryptoResult = await encryptPayload(rawString, masterKey);
+                envelope.cryptoMetadata = { salt: cryptoResult.salt, iv: cryptoResult.iv };
+                envelope.payload = cryptoResult.ciphertext;
+            } else {
+                envelope.payload = rawData;
+            }
+
+            const timestamp = new Date().toISOString().split('T')[0];
+            const blob = new Blob([JSON.stringify(envelope, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${this.appId}_backup_${timestamp}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        };
+
+        // --- IMPORT PIPELINE (Remains unchanged) ---
+        importPicker.onchange = (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = async (event) => {
+                try {
+                    const envelope = JSON.parse(event.target.result);
+                    if (!envelope || envelope.appId !== this.appId) {
+                        alert("Incompatible backup file: App ID mismatch.");
+                        return;
+                    }
+
+                    const keyEvent = new CustomEvent('app-key-request', {
+                        detail: { masterKey: null },
+                        cancelable: true
+                    });
+                    this.dispatchEvent(keyEvent);
+                    let activeKey = keyEvent.detail.masterKey;
+                    let clearData = null;
+
+                    if (envelope.encrypted) {
+                        if (!activeKey) {
+                            activeKey = prompt("Enter the passphrase to decrypt this backup file:");
+                            if (!activeKey) return;
+                        }
+                        const decryptedString = await decryptPayload(
+                            envelope.payload,
+                            activeKey,
+                            envelope.cryptoMetadata.salt,
+                            envelope.cryptoMetadata.iv
+                        );
+                        clearData = JSON.parse(decryptedString);
+                    } else {
+                        clearData = envelope.payload;
+                    }
+
+                    this.dispatchEvent(new CustomEvent('app-import-success', {
+                        detail: { data: clearData }
+                    }));
+                } catch (err) {
+                    alert("Import failed. The file passphrase does not match your active session.");
+                }
+                importPicker.value = '';
+            };
+            reader.readAsText(file);
+        };
+
+        // --- NUCLEAR WIPE PIPELINE ---
+        resetBtn.onclick = () => {
+            const confirmWipe = confirm("Are you completely sure you want to wipe this application? This will permanently delete all local keys, database entries, and settings configurations.");
+            if (confirmWipe) {
+                localStorage.removeItem(this.appId);
+                // Force a page refresh to throw the user back to a clean sandbox slate
+                location.reload();
+            }
+        };
+    }
+}
+customElements.define('app-data-io', AppDataIO);
+// Universal App Identity Metadata
+const APP_CONFIG = {
+    appId: "totp-vault",
+    version: "1.0.0",
+    encrypted: true
+};
 
 const DEMO_DATA = [
     { label: "DEMO: GitHub Sandbox", secret: "JBSWY3DPEHPK3PXP", period: 30 },
     { label: "DEMO: Nextcloud Admin", secret: "ORXW233SMVZA4===", period: 30 }
 ];
 
-let activeKeys = [];
-let isDemoMode = false;
+// Volatile Runtime Memory (Purged cleanly on tab close or page loss)
+let runtimeState = {
+    masterKey: null,
+    activeKeys: [],
+    isDemoMode: false
+};
 
-// Dynamic rendering
+// Storage Packing & Crypto Pipelines
+async function saveAndSyncStorage() {
+    const envelope = {
+        appId: APP_CONFIG.appId,
+        version: APP_CONFIG.version,
+        encrypted: APP_CONFIG.encrypted,
+        cryptoMetadata: {},
+        payload: ""
+    };
+
+    if (APP_CONFIG.encrypted && runtimeState.masterKey) {
+        const rawString = JSON.stringify(runtimeState.activeKeys);
+        const result = await encryptPayload(rawString, runtimeState.masterKey);
+        
+        envelope.cryptoMetadata = {
+            salt: result.salt,
+            iv: result.iv
+        };
+        envelope.payload = result.ciphertext;
+    } else {
+        envelope.payload = runtimeState.activeKeys;
+    }
+
+    localStorage.setItem(APP_CONFIG.appId, JSON.stringify(envelope));
+    return envelope;
+}
+
+// Dynamic UI Rendering Engine Loop
 function buildUI() {
     const listContainer = document.getElementById("vault-list");
     listContainer.innerHTML = "";
 
     const onboarding = document.getElementById("onboarding-container");
-    onboarding.style.display = isDemoMode ? "block" : "none";
+    onboarding.style.display = runtimeState.isDemoMode ? "block" : "none";
 
-    if (!window.crypto || !window.crypto.subtle) {
-        listContainer.innerHTML = "<div style='color:red; font-size:12px; padding:8px;'>ERR: Insecure context! Open via local file system or HTTPS.</div>";
-        return;
-    }
-
-    activeKeys.forEach((item, index) => {
+    runtimeState.activeKeys.forEach((item, index) => {
         const card = document.createElement("div");
         card.className = "code-card";
         card.tabIndex = 0; 
@@ -383,7 +565,7 @@ function buildUI() {
         const label = document.createElement("div");
         label.className = "account-label";
         
-        if (isDemoMode) {
+        if (runtimeState.isDemoMode) {
             const badge = document.createElement("span");
             badge.className = "demo-badge";
             badge.textContent = "Demo";
@@ -416,27 +598,23 @@ function buildUI() {
     });
 
     populateProvisionerTextarea();
-    tickEngine();
 }
 
 function populateProvisionerTextarea() {
     const textarea = document.getElementById("setup-raw");
-    if (!textarea || isDemoMode) return;
+    if (!textarea || runtimeState.isDemoMode) return;
 
-    const rawLines = activeKeys.map(item => {
-        const period = item.period || 30;
-        return item.label + "," + item.secret + "," + period;
+    const rawLines = runtimeState.activeKeys.map(item => {
+        return `${item.label},${item.secret},${item.period || 30}`;
     });
     textarea.value = rawLines.join("\n");
 }
 
 async function tickEngine() {
-    if (!window.crypto || !window.crypto.subtle) return;
-    
     const epoch = Math.floor(Date.now() / 1000);
     let minGlobalTime = 999;
 
-    activeKeys.forEach((item, index) => {
+    runtimeState.activeKeys.forEach((item, index) => {
         const period = item.period || 30;
         const remaining = period - (epoch % period);
         
@@ -455,44 +633,70 @@ async function tickEngine() {
         }
     });
 
-    document.getElementById("global-timer").textContent = minGlobalTime + "s";
+    // const globalTimer = document.getElementById("global-timer");
+    // if (globalTimer) globalTimer.textContent = minGlobalTime + "s";
 }
 
-async function initVault() {
-    const localData = localStorage.getItem(STORAGE_KEY);
+// State Bootloader System
+// State Bootloader System
+document.addEventListener('DOMContentLoaded', () => {
+    const ioComponent = document.getElementById('dataManager');
+    const storedData = localStorage.getItem(APP_CONFIG.appId);
 
-    if (!localData || localData.trim() === "") {
-        isDemoMode = true;
-        activeKeys = DEMO_DATA;
+    // 1. Initial Storage Assessment
+    if (!storedData) {
+        // No storage data: Load standard demo profile automatically
+        runtimeState.isDemoMode = true;
+        runtimeState.activeKeys = DEMO_DATA;
+        
+        // Reveal workspace immediately since there's no password yet
+        document.getElementById('appWorkspace').style.display = 'block'; 
         buildUI();
         setInterval(tickEngine, 1000);
-        return;
+    } else {
+        // Active data found: Initialize the Component Loader
+        const lock = document.createElement('app-lockscreen');
+        lock.setAttribute('app-id', APP_CONFIG.appId);
+        lock.setAttribute('app-name', 'TOTP Vault');
+        lock.setAttribute('custom-desc', 'Access tokens will remain hidden until decrypted.');
+        if (APP_CONFIG.encrypted) lock.setAttribute('encrypted', '');
+
+        lock.addEventListener('app-unlocked-success', (e) => {
+            const { password, data } = e.detail;
+            
+            runtimeState.isDemoMode = false;
+            runtimeState.masterKey = password;
+            runtimeState.activeKeys = data;
+            
+            // Reveal workspace ONLY after successful passphrase entry
+            document.getElementById('appWorkspace').style.display = 'block'; 
+            buildUI();
+            setInterval(tickEngine, 1000);
+        });
+
+        document.body.appendChild(lock);
     }
 
-    isDemoMode = false;
-    let decryptedStr = null;
-    
-    while (decryptedStr === null) {
-        let pass = prompt("Enter Master Password to open secure vault:");
-        if (pass === null) {
-            isDemoMode = true;
-            activeKeys = DEMO_DATA;
-            break;
-        }
-        try {
-            decryptedStr = await decryptPayload(localData, pass);
-            activeKeys = JSON.parse(decryptedStr);
-        } catch (err) {
-            alert("Invalid Password. Decryption failed.");
-            decryptedStr = null;
-        }
-    }
+    // 2. Data Management Subscriptions (Keep these exactly the same)
+    ioComponent.addEventListener('app-export-request', (e) => {
+        e.detail.rawData = runtimeState.activeKeys;
+        e.detail.masterKey = runtimeState.masterKey;
+    });
 
-    buildUI();
-    setInterval(tickEngine, 1000);
-}
+    ioComponent.addEventListener('app-key-request', (e) => {
+        e.detail.masterKey = runtimeState.masterKey;
+    });
 
-// Interactive Subscriptions
+    ioComponent.addEventListener('app-import-success', async (e) => {
+        runtimeState.isDemoMode = false;
+        runtimeState.activeKeys = e.detail.data;
+        await saveAndSyncStorage();
+        buildUI();
+        tickEngine();
+    });
+});
+
+// Interactive Workspace Controls
 document.getElementById("toggle-setup-btn").addEventListener("click", () => {
     const pane = document.getElementById("setup-pane");
     pane.style.display = (pane.style.display === "block") ? "none" : "block";
@@ -501,59 +705,17 @@ document.getElementById("toggle-setup-btn").addEventListener("click", () => {
     }
 });
 
-// File Import Handler with strict Passphrase Validation Gate
-document.getElementById("file-load-btn").addEventListener("click", () => {
-    const fileInput = document.getElementById("import-file-input");
-    const passwordInput = document.getElementById("import-file-pass").value;
-
-    if (!fileInput.files.length) {
-        alert("Please select a vault payload file first.");
-        return;
-    }
-    if (!passwordInput) {
-        alert("You must supply the validation passphrase to test the file container.");
-        return;
-    }
-
-    const file = fileInput.files[0];
-    const reader = new FileReader();
-
-    reader.onload = async function(e) {
-        const rawContentString = e.target.result.trim();
-        
-        try {
-            // Attempt decryption check *before* writing anything to localStorage
-            await decryptPayload(rawContentString, passwordInput);
-            
-            // Verification passed safely
-            localStorage.setItem(STORAGE_KEY, rawContentString);
-            alert("Success! File verified and loaded to storage. Restarting application context...");
-            window.location.reload();
-        } catch (err) {
-            alert("Lockout Prevention Block: The passphrase provided could not unlock the selected file structure. Storage was not updated.");
-        }
-    };
-
-    reader.readAsText(file);
-});
-
-// New Account Collection Creation with Confirmation matching checks
+// Manual Text Compilation Parser Button
+// Manual Text Compilation Parser Button
 document.getElementById("encrypt-trigger-btn").addEventListener("click", async () => {
     const rawText = document.getElementById("setup-raw").value.trim();
-    const passphrase = document.getElementById("setup-pass").value;
-    const confirmPassphrase = document.getElementById("setup-pass-confirm").value;
 
-    if (!rawText || !passphrase) {
-        alert("Both credentials data arrays and passphrase values are required elements.");
+    if (!rawText) {
+        alert("Credentials field cannot be left blank.");
         return;
     }
 
-    // Double-check block comparison
-    if (passphrase !== confirmPassphrase) {
-        alert("Input Mismatch: The passphrase and confirmation pass blocks do not match.");
-        return;
-    }
-
+    // 1. Parse the text fields into a clean array first
     const parsedEntries = [];
     const lines = rawText.split("\n");
     for (let line of lines) {
@@ -568,21 +730,45 @@ document.getElementById("encrypt-trigger-btn").addEventListener("click", async (
         parsedEntries.push({ label, secret, period });
     }
 
+    // handle setting up keys for first time, from demo mode
+    if (runtimeState.isDemoMode && !runtimeState.masterKey) {
+        // Intercept execution and spin up the initialization lockscreen wrapper!
+        const lock = document.createElement('app-lockscreen');
+        lock.setAttribute('app-id', APP_CONFIG.appId);
+        // Force the lockscreen into "Create Passphrase" mode
+        lock.setAttribute('fresh-run', ''); 
+
+        lock.addEventListener('app-unlocked-success', async (e) => {
+            // Capture the password they just created
+            runtimeState.masterKey = e.detail.password;
+            runtimeState.isDemoMode = false;
+            runtimeState.activeKeys = parsedEntries;
+
+            // Commit the freshly encrypted payload to storage disk safely
+            await saveAndSyncStorage();
+            
+            // Clean up the display panels
+            document.getElementById("setup-pane").style.display = "none";
+            buildUI();
+            tickEngine();
+            alert("Vault created and secured successfully!");
+        });
+
+        document.body.appendChild(lock);
+        return; // Halt main thread until the component callback fires successfully
+    }
+
+    // 3. Normal Flow: User is already unlocked/logged in, just overwrite and save
     try {
-        const cipherText = await encryptPayload(JSON.stringify(parsedEntries), passphrase);
-        
-        localStorage.setItem(STORAGE_KEY, cipherText);
-        
-        document.getElementById("setup-output").textContent = cipherText;
-        document.getElementById("setup-output-container").style.display = "block";
-        
-        alert("Vault written and saved successfully!");
+        runtimeState.activeKeys = parsedEntries;
+        await saveAndSyncStorage();
+        buildUI();
+        tickEngine();
+        alert("Vault successfully updated in storage!");
     } catch (err) {
-        alert("Compilation failed: " + err.message);
+        alert("Save failure: " + err.message);
     }
 });
-
-window.addEventListener("DOMContentLoaded", initVault);
     </script>
 </body>
 </html>
