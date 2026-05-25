@@ -8,13 +8,13 @@
       
       
       
-        <link rel="canonical" href="https://dthigpen.github.io/single-file-web-apps/architecture/">
+        <link rel="canonical" href="https://dthigpen.github.io/single-file-web-apps/development/">
       
       
-        <link rel="prev" href="..">
+        <link rel="prev" href="../get-started/">
       
       
-        <link rel="next" href="../get-started/">
+        <link rel="next" href="../apps/totp_app/">
       
       
         
@@ -25,7 +25,7 @@
     
     
       
-        <title>Architecture - Single File Web Apps</title>
+        <title>Development - Single File Web Apps</title>
       
     
     
@@ -74,7 +74,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#architecture-system-design" class="md-skip">
+        <a href="#development-guide" class="md-skip">
           Skip to content
         </a>
       
@@ -110,7 +110,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Architecture
+              Development
             
           </span>
         </div>
@@ -230,37 +230,10 @@
       
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Architecture
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../architecture/" class="md-nav__link">
         
   
   
@@ -276,126 +249,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#the-data-lifecycle" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        The Data Lifecycle
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="The Data Lifecycle">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#1-working-data-local-storage" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        1. Working Data (Local Storage)
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#2-encryption-process" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        2. Encryption Process
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#3-persistent-data-file-system-exports" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        3. Persistent Data (File System Exports)
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#core-constraints-limitations" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Core Constraints &amp; Limitations
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Core Constraints &amp; Limitations">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#1-the-key-management-burden" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        1. The Key-Management Burden
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#2-browser-storage-eviction" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        2. Browser Storage Eviction
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#ui-accessibility-guidelines" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        UI &amp; Accessibility Guidelines
-      
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -431,10 +284,37 @@
       
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../development/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Development
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -450,6 +330,126 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#local-environment-setup" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Local Environment Setup
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Local Environment Setup">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-clone-the-repository" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Clone the Repository
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-install-development-dependencies" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Install Development Dependencies
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#architectural-pipeline" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Architectural Pipeline
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#compilation-build-workflows" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Compilation &amp; Build Workflows
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Compilation &amp; Build Workflows">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#compile-single-file-targets" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Compile Single-File Targets
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#live-documentation-preview" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Live Documentation Preview
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#distribution-deployment" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Distribution &amp; Deployment
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -563,22 +563,22 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#the-data-lifecycle" class="md-nav__link">
+  <a href="#local-environment-setup" class="md-nav__link">
     <span class="md-ellipsis">
       
-        The Data Lifecycle
+        Local Environment Setup
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="The Data Lifecycle">
+    <nav class="md-nav" aria-label="Local Environment Setup">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#1-working-data-local-storage" class="md-nav__link">
+  <a href="#1-clone-the-repository" class="md-nav__link">
     <span class="md-ellipsis">
       
-        1. Working Data (Local Storage)
+        1. Clone the Repository
       
     </span>
   </a>
@@ -586,21 +586,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#2-encryption-process" class="md-nav__link">
+  <a href="#2-install-development-dependencies" class="md-nav__link">
     <span class="md-ellipsis">
       
-        2. Encryption Process
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#3-persistent-data-file-system-exports" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        3. Persistent Data (File System Exports)
+        2. Install Development Dependencies
       
     </span>
   </a>
@@ -613,22 +602,33 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#core-constraints-limitations" class="md-nav__link">
+  <a href="#architectural-pipeline" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Core Constraints &amp; Limitations
+        Architectural Pipeline
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Core Constraints &amp; Limitations">
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#compilation-build-workflows" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Compilation &amp; Build Workflows
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Compilation &amp; Build Workflows">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#1-the-key-management-burden" class="md-nav__link">
+  <a href="#compile-single-file-targets" class="md-nav__link">
     <span class="md-ellipsis">
       
-        1. The Key-Management Burden
+        Compile Single-File Targets
       
     </span>
   </a>
@@ -636,10 +636,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#2-browser-storage-eviction" class="md-nav__link">
+  <a href="#live-documentation-preview" class="md-nav__link">
     <span class="md-ellipsis">
       
-        2. Browser Storage Eviction
+        Live Documentation Preview
       
     </span>
   </a>
@@ -652,10 +652,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#ui-accessibility-guidelines" class="md-nav__link">
+  <a href="#distribution-deployment" class="md-nav__link">
     <span class="md-ellipsis">
       
-        UI &amp; Accessibility Guidelines
+        Distribution &amp; Deployment
       
     </span>
   </a>
@@ -679,71 +679,57 @@
 
 
 
-<h1 id="architecture-system-design">Architecture &amp; System Design</h1>
-<p>This project follows a <strong>local-only, single-file application model</strong>. There are no databases to maintain, no servers to configure, and no cloud backends tracking your data. The browser itself is the entire operating system boundary.</p>
+<h1 id="development-guide">Development Guide</h1>
+<p>Welcome! This guide outlines the local development setup, architectural philosophy, and build process for contributing to the single-file web applications suite.</p>
 <hr />
-<h2 id="the-data-lifecycle">The Data Lifecycle</h2>
-<p>Data in this ecosystem flows between an active, unencrypted state in memory and two distinct, encrypted persistent states on disk.</p>
-<pre><code class="language-text">                  ┌──────────────────────────────────┐
-                  │       Browser Runtime RAM        │
-                  │ (Decrypted Plaintext JSON) │
-                  └────────────────┬─────────────────┘
-                                   │
-                      Master Passphrase Encryption
-                                   │
-                                   ▼
-         ================ Encrypted Storage Boundary ================
-                                   │
-                  ┌────────────────┴────────────────┐
-                  ▼                                 ▼
-       ┌─────────────────────┐           ┌─────────────────────┐
-       │    Local Storage    │           │ Physical File System│
-       │ (Browser Persistent)│           │ (Secure File Backup)│
-       └──────────┬──────────┘           └─────────────────────┘
-                  │
-            Device Clear
-          (Browser Wipe)
-                  │
-                  ▼
-          [ Data Cleared ]
+<h2 id="local-environment-setup">Local Environment Setup</h2>
+<p>These tools operate entirely locally with minimal external dependencies. To compile the production builds or run the documentation site, make sure you have Python installed on your system.</p>
+<h3 id="1-clone-the-repository">1. Clone the Repository</h3>
+<pre><code class="language-bash">git clone [https://github.com/dthigpen/single-file-web-apps.git](https://github.com/dthigpen/single-file-web-apps.git)
+cd single-file-web-apps
 </code></pre>
-<h3 id="1-working-data-local-storage">1. Working Data (Local Storage)</h3>
-<p>Primary working data lives in the browser's <code>localStorage</code> or <code>IndexedDB</code>. This allows the app to remember your dataset across page refreshes. To ensure security at rest, it is never saved as plaintext; it sits on your device's disk as a sealed AES-GCM encrypted string block.</p>
-<h3 id="2-encryption-process">2. Encryption Process</h3>
-<p>When you save or update your data, your master passphrase seals the database in-memory before it ever touches your storage drive. The data flows through this pipeline:</p>
-<pre><code class="language-text">[ User Master Passphrase ]
-            │
-            ▼
-   [ PBKDF2-HMAC-SHA256 ] ──► (100,000 Iterations, 16-Byte Random Salt)
-            │
-            ▼
-   [ Derived 256-Bit Key ]
-            │
-            ▼
-    [ AES-GCM-256 Bit ]   ──► (12-Byte Unique Nonce / IV)
-            │
-            ▼
- [ Final Base64 Encrypted String ] ──► Written to localStorage
+<h3 id="2-install-development-dependencies">2. Install Development Dependencies</h3>
+<p>Python's standard library handles the entire build compilation system. Dependencies are only required for rendering the local documentation server (<code>mkdocs</code>).</p>
+<pre><code class="language-bash"># Optional: Set up a clean virtual environment
+python -m venv .venv
+source .venv/bin/activate  # On Windows use: .venv\Scripts\activate
+
+# Install the technical documentation tools
+pip install mkdocs mkdocs-material
 </code></pre>
-<h3 id="3-persistent-data-file-system-exports">3. Persistent Data (File System Exports)</h3>
-<p>Because browser local storage is managed by the operating system, it is fundamentally volatile. If your device runs incredibly low on disk space, or if you clear your browser app cache, the browser may evict your local storage.</p>
-<p>To prevent data loss, permanent records rely on you manually exporting that same encrypted Base64 block out to a physical file (like a <code>.txt</code> or .<code>json</code> file) stored securely on your device's hard drive or MicroSD card.</p>
 <hr />
-<h2 id="core-constraints-limitations">Core Constraints &amp; Limitations</h2>
-<p>Operating strictly out of a single file wrapper without a traditional server backend introduces a few specific compromises you need to design around:</p>
-<h3 id="1-the-key-management-burden">1. The Key-Management Burden</h3>
-<p>Because there is no backend server to securely inject hidden environment variables or API secrets, apps that talk to external web services (like mapping or weather tools) require you to bring your own API key (BYOK). These keys must be input via the UI and stored safely in your encrypted application state.</p>
-<h3 id="2-browser-storage-eviction">2. Browser Storage Eviction</h3>
-<p>Modern mobile browsers and feature-phone web views will occasionally purge <code>localStorage</code> data if the device runs incredibly low on disk space, or if the browser app cache is cleared. 
-* <strong>The Mitigation:</strong> You cannot rely on the browser for permanent, multi-year storage. You <strong>must</strong> periodically use the app's export features to save an encrypted backup file to physical storage.</p>
-<hr />
-<h2 id="ui-accessibility-guidelines">UI &amp; Accessibility Guidelines</h2>
-<p>To make sure these tools remain highly usable on any hardware profile, whether it's a desktop monitor, an e-ink dashboard, or a compact phone webview:</p>
+<h2 id="architectural-pipeline">Architectural Pipeline</h2>
+<p>To keep the development workspace highly organized, reusable user interface layers are kept completely separated from individual application runtimes. </p>
 <ul>
-<li><strong>Uncomplicated Layouts:</strong> Focus on single-column, highly responsive structures. Avoid deep menus or overlapping UI windows.</li>
-<li><strong>Visible Focus States:</strong> Because mouse pointers on feature phones can sometimes be finicky or slow to navigate, interactive items must feature distinct outline highlights (<code>:focus</code> and <code>:focus-within</code>) so you always know exactly what element is selected.</li>
-<li><strong>File Readers Over Clipboards:</strong> Clipboard access is highly sandboxed and unreliable on feature phones. Always provide an explicit file loader (<code>&lt;input type="file"&gt;</code>) rather than forcing yourself to copy and paste massive text strings.</li>
+<li><strong><code>shared/</code></strong>: Contains core cryptographic functions (<code>crypto.js</code>), interface layout modules (<code>lockscreen.js</code>, <code>data-io.js</code>), and global styles (<code>theme.css</code>).</li>
+<li><strong><code>totp_app/</code></strong> / <strong><code>todo_app/</code></strong>: Contain the raw, modular source files for individual applications before compilation.</li>
+<li><strong><code>dist/</code></strong>: The target destination directory containing the final standalone, distributable HTML deployment packages.</li>
 </ul>
+<p>The building engine scans source files for layout include tokens (e.g., <code>{{include: shared/utils.js}}</code>) and injects the corresponding dependency scripts cleanly inline during compilation phases.</p>
+<hr />
+<h2 id="compilation-build-workflows">Compilation &amp; Build Workflows</h2>
+<h3 id="compile-single-file-targets">Compile Single-File Targets</h3>
+<p>Run the custom Python build script from the root folder to process dependency tags and assemble the standalone production packages inside the <code>dist/</code> directory.</p>
+<pre><code class="language-bash">python build.py
+</code></pre>
+<h3 id="live-documentation-preview">Live Documentation Preview</h3>
+<p>To preview documentation edits or verify changes to the integration hooks locally before pushing to production branches, spin up the local live-reload documentation server:</p>
+<pre><code class="language-bash">mkdocs serve
+</code></pre>
+<p>Once initialized, navigate your local browser workspace to <code>http://127.0.0.1:8000/</code>.</p>
+<hr />
+<h2 id="distribution-deployment">Distribution &amp; Deployment</h2>
+<p>Deployments to GitHub Pages are managed locally via automated file hooks. </p>
+<p>When you execute the deployment script, a custom Python hook (<code>hooks.py</code>) automatically intercepts the configuration pipeline, copies any freshly generated <code>.html</code> application packages out of <code>dist/</code>, stages them as static documentation assets inside <code>docs/dist/</code>, and signs them out to the remote host.</p>
+<p>To compile and deploy the complete site layout along with all application runtimes in a single pass, execute:</p>
+<pre><code class="language-bash"># 1. Ensure production builds are fully compiled
+python build.py
+
+# 2. Automatically package, stage, and push assets live
+mkdocs gh-deploy
+</code></pre>
+<p>Once pushed, your live application sandboxes will become immediately accessible at:<br />
+<code>https://dthigpen.github.io/single-file-web-apps/dist/[app_name].html</code></p>
 
 
 
