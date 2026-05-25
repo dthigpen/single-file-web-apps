@@ -62,127 +62,246 @@ button:active {
 .btn-secondary:active {
     background-color: #cccccc;
 }
-        
-        /* App-specific style additions */
-        .todo-item {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 6px 0;
-            border-bottom: 1px solid #eee;
-        }
-        .todo-item:last-child { border-bottom: none; }
-        .todo-text { font-size: 1rem; }
     </style>
 </head>
 <body>
-
-    <div class="card">
-        <h1>Example Task Utility</h1>
-        <p>Demonstrates single-file compilation, shared assets, and local data persistence.</p>
-    </div>
-
-    <div class="card">
-        <h2>Add Task</h2>
-        <input type="text" id="taskInput" placeholder="Enter task name...">
-        <button onclick="addNewTask()">Add Entry</button>
-    </div>
-
-    <div class="card">
-        <h2>Active Tasks</h2>
-        <div id="taskList"></div>
-    </div>
-
-    <div class="card">
-        <h2>Backup & Restore</h2>
-        <p>Save state payload down to device file storage, or import an active backup string.</p>
-        <button onclick="handleBackup()">Export Data</button>
-        <div style="margin-top: 12px;">
-            <input type="file" id="importPicker" accept=".json">
+    <div id="appWorkspace" style="display: none;">
+        <div class="card">
+            <h1>Example Task Utility</h1>
+            <p>Demonstrates single-file compilation and shared asset modules.</p>
         </div>
+
+        <div class="card">
+            <h2>Add Task</h2>
+            <input type="text" id="taskInput" placeholder="Enter task name...">
+            <button onclick="addNewTask()">Add Entry</button>
+        </div>
+
+        <div class="card">
+            <h2>Active Tasks</h2>
+            <div id="taskList"></div>
+        </div>
+
+        <app-data-io id="dataManager" app-id="example-tasks"></app-data-io>
     </div>
 
     <script>
-/**
- * Generates a dynamic file download directly in the browser environment.
- * @param {Object} dataObject - The state or configuration object to save.
- * @param {string} filename - The desired target name for the downloaded file.
- */
-function exportAppState(dataObject, filename) {
-    const jsonString = JSON.stringify(dataObject, null, 2);
-    const blob = new Blob([jsonString], { type: "application/json" });
-    const link = document.createElement("a");
-    
-    link.href = URL.createObjectURL(blob);
-    link.download = filename;
-    
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(link.href);
-}
+class AppLockscreen extends HTMLElement {
+    async connectedCallback() {
+        const appId = this.getAttribute('app-id');
+        const isEncrypted = this.hasAttribute('encrypted');
+        
+        const rawStored = localStorage.getItem(appId);
+        const isFreshRun = !rawStored;
 
-/**
- * Binds an event listener to a file input element to read raw text content.
- * @param {string} inputId - The HTML id string of the target input[type="file"].
- * @param {function} callback - Execution block passing the successfully parsed object.
- */
-function initializeAppImporter(inputId, callback) {
-    const filePicker = document.getElementById(inputId);
-    if (!filePicker) return;
+        // Automatically configure text instructions based on context
+        const title = isFreshRun ? 'Create Master Passphrase' : 'Database Locked';
+        const desc = isFreshRun 
+            ? 'Set a local password to encrypt your storage profile.' 
+            : 'Enter your passphrase to decrypt your workspace.';
 
-    filePicker.addEventListener('change', function(e) {
-        const file = e.target.files[0];
-        if (!file) return;
+        this.innerHTML = `
+            <div class="lockscreen-overlay">
+                <div class="card lockscreen-panel">
+                    <h2>${title}</h2>
+                    <p>${desc}</p>
+                    <input type="password" id="sysPassInput" placeholder="Passphrase..." style="width: 100%; margin-bottom: 12px;">
+                    <button id="sysUnlockBtn" style="width: 100%;">${isFreshRun ? 'Set Passphrase' : 'Unlock Database'}</button>
+                    <div id="sysLockError" class="lockscreen-error">Incorrect passphrase. Try again.</div>
+                    <hr style="margin: 20px 0; border: 0; border-top: 1px solid #333;">
+                    <button id="sysResetBtn" style="width: 100%; background: #2a1414; color: #ff8888;">Reset App (Wipe Storage)</button>
+                </div>
+            </div>
+        `;
 
-        const reader = new FileReader();
-        reader.onload = function(event) {
+        const input = this.querySelector('#sysPassInput');
+        const unlockBtn = this.querySelector('#sysUnlockBtn');
+        const resetBtn = this.querySelector('#sysResetBtn');
+        const errorDiv = this.querySelector('#sysLockError');
+
+        input.focus();
+        input.addEventListener('keydown', (e) => { if (e.key === 'Enter') unlockBtn.click(); });
+
+        unlockBtn.onclick = async () => {
+            const password = input.value;
+            if (!password) return;
+
             try {
-                const parsedData = JSON.parse(event.target.result);
-                callback(parsedData);
+                let decryptedPayload = null;
+
+                if (isFreshRun) {
+                    // Fresh run implies zero stored bytes, so payload starts blank
+                    decryptedPayload = null; 
+                } else {
+                    if (isEncrypted) {
+                        const envelope = JSON.parse(rawStored);
+                        // Execute true cryptographic processing pipeline pass internally
+                        const decryptedString = await decryptPayload(
+                            envelope.payload,
+                            password,
+                            envelope.cryptoMetadata.salt,
+                            envelope.cryptoMetadata.iv
+                        );
+                        decryptedPayload = JSON.parse(decryptedString);
+                    } else {
+                        const envelope = JSON.parse(rawStored);
+                        decryptedPayload = envelope.payload;
+                    }
+                }
+
+                // Fire off single source of truth success event up to app
+                this.dispatchEvent(new CustomEvent('app-unlocked-success', {
+                    detail: { password, data: decryptedPayload, isFreshRun }
+                }));
+                
+                this.remove();
             } catch (err) {
-                alert("Failed to parse file data: " + err.message);
+                errorDiv.style.display = 'block';
+                input.value = '';
+                input.focus();
             }
         };
-        reader.readAsText(file);
-    });
-}
 
-/**
- * Normalizes a Base32 string into a standard byte buffer.
- */
-function base32ToBuf(str) {
-    const b32chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
-    let cleanStr = str.replace(/=+$/, "").toUpperCase();
-    let len = cleanStr.length;
-    let buffer = new Uint8Array(((len * 5) / 8) | 0);
-    let bits = 0;
-    let value = 0;
-    let index = 0;
-
-    for (let i = 0; i < len; i++) {
-        let val = b32chars.indexOf(cleanStr[i]);
-        if (val === -1) continue;
-        value = (value << 5) | val;
-        bits += 5;
-        if (bits >= 8) {
-            buffer[index++] = (value >> (bits - 8)) & 255;
-            bits -= 8;
-        }
+        resetBtn.onclick = () => {
+            if (confirm("Wipe storage? All unexported changes will be lost.")) {
+                localStorage.removeItem(appId);
+                location.reload();
+            }
+        };
     }
-    return buffer;
 }
+customElements.define('app-lockscreen', AppLockscreen);
+class AppDataIO extends HTMLElement {
+    connectedCallback() {
+        this.appId = this.getAttribute('app-id');
+        this.version = this.getAttribute('version') || '1.0.0';
+        this.isEncrypted = this.hasAttribute('encrypted');
 
+        this.innerHTML = `
+            <div class="card">
+                <h2>Data Management</h2>
+                <p>Save state payload down to device file storage, or import an active backup string.</p>
+                <button id="ioExportBtn" style="width: 100%; margin-bottom: 12px;">Export Backup File</button>
+                <div style="margin-top: 12px;">
+                    <label style="display: block; margin-bottom: 6px; font-weight: bold;">Import Backup File:</label>
+                    <input type="file" id="ioImportPicker" accept=".json" style="width: 100%;">
+                </div>
+            </div>
+        `;
+
+        const exportBtn = this.querySelector('#ioExportBtn');
+        const importPicker = this.querySelector('#ioImportPicker');
+
+        // --- EXPORT PIPELINE ---
+        exportBtn.onclick = async () => {
+            // 1. Ask the app for its raw state data AND the session key (Safe in memory!)
+            const exportEvent = new CustomEvent('app-export-request', {
+                detail: { rawData: null, masterKey: null },
+                cancelable: true
+            });
+            this.dispatchEvent(exportEvent);
+
+            const { rawData, masterKey } = exportEvent.detail;
+            if (!rawData) return;
+
+            const envelope = {
+                appId: this.appId,
+                version: this.version,
+                encrypted: this.isEncrypted,
+                cryptoMetadata: {},
+                payload: ""
+            };
+
+            // 2. Component encapsulates ALL crypto heavy lifting quietly
+            if (this.isEncrypted && masterKey) {
+                const rawString = JSON.stringify(rawData);
+                const cryptoResult = await encryptPayload(rawString, masterKey);
+                envelope.cryptoMetadata = { salt: cryptoResult.salt, iv: cryptoResult.iv };
+                envelope.payload = cryptoResult.ciphertext;
+            } else {
+                envelope.payload = rawData;
+            }
+
+            // 3. Handle file system saving natively
+            const timestamp = new Date().toISOString().split('T')[0];
+            const blob = new Blob([JSON.stringify(envelope, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${this.appId}_backup_${timestamp}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        };
+
+        // --- IMPORT PIPELINE ---
+        importPicker.onchange = (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = async (event) => {
+                try {
+                    const envelope = JSON.parse(event.target.result);
+                    
+                    if (!envelope || envelope.appId !== this.appId) {
+                        alert("Incompatible backup file: App ID mismatch.");
+                        return;
+                    }
+
+                    // Request the current session password to try decrypting seamlessly
+                    const keyEvent = new CustomEvent('app-key-request', {
+                        detail: { masterKey: null },
+                        cancelable: true
+                    });
+                    this.dispatchEvent(keyEvent);
+                    let activeKey = keyEvent.detail.masterKey;
+
+                    let clearData = null;
+
+                    if (envelope.encrypted) {
+                        if (!activeKey) {
+                            // Fallback if the file requires a password but the app is open blank
+                            activeKey = prompt("Enter the passphrase to decrypt this backup file:");
+                            if (!activeKey) return;
+                        }
+
+                        // Run decryption locally inside the component block
+                        const decryptedString = await decryptPayload(
+                            envelope.payload,
+                            activeKey,
+                            envelope.cryptoMetadata.salt,
+                            envelope.cryptoMetadata.iv
+                        );
+                        clearData = JSON.parse(decryptedString);
+                    } else {
+                        clearData = envelope.payload;
+                    }
+
+                    // Hand clean data right to the app
+                    this.dispatchEvent(new CustomEvent('app-import-success', {
+                        detail: { data: clearData }
+                    }));
+
+                } catch (err) {
+                    alert("Import failed. The file passphrase does not match your active session.");
+                }
+                importPicker.value = '';
+            };
+            reader.readAsText(file);
+        };
+    }
+}
+customElements.define('app-data-io', AppDataIO);
 /**
- * Derives a deterministic cryptographic key from a pass string via PBKDF2.
+ * Derives a deterministic cryptographic key from a password string via PBKDF2.
  */
-async function deriveCryptoKey(password, salt) {
+async function deriveCryptoKey(password, saltBuffer) {
     const encoder = new TextEncoder();
     const baseKey = await window.crypto.subtle.importKey(
         "raw", encoder.encode(password), "PBKDF2", false, ["deriveKey"]
     );
     return window.crypto.subtle.deriveKey(
-        { name: "PBKDF2", salt: salt, iterations: 100000, hash: "SHA-256" },
+        { name: "PBKDF2", salt: saltBuffer, iterations: 100000, hash: "SHA-256" },
         baseKey,
         { name: "AES-GCM", length: 256 },
         false,
@@ -192,6 +311,7 @@ async function deriveCryptoKey(password, salt) {
 
 /**
  * Encrypts a plaintext string with AES-GCM 256.
+ * Returns an object matching the schema cryptoMetadata setup.
  */
 async function encryptPayload(plainText, password) {
     const encoder = new TextEncoder();
@@ -205,24 +325,23 @@ async function encryptPayload(plainText, password) {
         encoder.encode(plainText)
     );
 
-    const combined = new Uint8Array(salt.length + iv.length + cipherBuf.byteLength);
-    combined.set(salt, 0);
-    combined.set(iv, salt.length);
-    combined.set(new Uint8Array(cipherBuf), salt.length + iv.length);
-
-    return btoa(String.fromCharCode.apply(null, combined));
+    // Convert separate buffers to simple Base64 strings for the JSON envelope
+    return {
+        salt: btoa(String.fromCharCode(...salt)),
+        iv: btoa(String.fromCharCode(...iv)),
+        ciphertext: btoa(String.fromCharCode(...new Uint8Array(cipherBuf)))
+    };
 }
 
 /**
- * Decrypts a base64 encrypted payload with AES-GCM 256.
+ * Decrypts individual Base64 parts with AES-GCM 256.
  */
-async function decryptPayload(cipherTextB64, password) {
-    const binary = atob(cipherTextB64);
-    const combined = new Uint8Array(binary.length).map((_, i) => binary.charCodeAt(i));
+async function decryptPayload(ciphertextB64, password, saltB64, ivB64) {
+    const toBuf = (b64) => Uint8Array.from(atob(b64), c => c.charCodeAt(0));
     
-    const salt = combined.slice(0, 16);
-    const iv = combined.slice(16, 28);
-    const cipherBuf = combined.slice(28);
+    const salt = toBuf(saltB64);
+    const iv = toBuf(ivB64);
+    const cipherBuf = toBuf(ciphertextB64);
 
     const key = await deriveCryptoKey(password, salt);
     const plainBuf = await window.crypto.subtle.decrypt(
@@ -233,65 +352,38 @@ async function decryptPayload(cipherTextB64, password) {
 
     return new TextDecoder().decode(plainBuf);
 }
+// Universal App Identity Metadata
+const APP_CONFIG = {
+    appId: "example-tasks",
+    version: "1.0.0",
+    encrypted: true
+};
 
-/**
- * Calculates a standard 6-digit TOTP token value.
- */
-async function calculateTOTP(secretB32, period = 30) {
-    try {
-        if (!window.crypto || !window.crypto.subtle) return "NO CRYPTO"; 
-        const keyData = base32ToBuf(secretB32);
-        if (keyData.byteLength === 0) return "ERR-32";
+// Volatile Runtime Memory (Purged cleanly on tab close or page loss)
+let runtimeState = {
+    masterKey: null, 
+    todoData: { items: [] }
+};
 
-        const epoch = Math.floor(Date.now() / 1000);
-        const timeStep = Math.floor(epoch / period);
-
-        const timeBuf = new ArrayBuffer(8);
-        const view = new DataView(timeBuf);
-        view.setUint32(4, timeStep, false); 
-        view.setUint32(0, 0, false); 
-
-        const cryptoKey = await window.crypto.subtle.importKey(
-            "raw", keyData, { name: "HMAC", hash: { name: "SHA-1" } }, false, ["sign"]
-        );
-
-        const hmacBuf = await window.crypto.subtle.sign("HMAC", cryptoKey, timeBuf);
-        const hmac = new Uint8Array(hmacBuf);
-
-        const offset = hmac[hmac.length - 1] & 0xf;
-        const code = ((hmac[offset] & 0x7f) << 24) |
-                     ((hmac[offset + 1] & 0xff) << 16) |
-                     ((hmac[offset + 2] & 0xff) << 8) |
-                     (hmac[offset + 3] & 0xff);
-
-        const digits = 6;
-        let totp = (code % Math.pow(10, digits)).toString();
-        while (totp.length < digits) totp = "0" + totp;
-
-        return totp.substring(0, 3) + " " + totp.substring(3);
-    } catch (e) {
-        return "ERR GEN";
-    }
-}
-// App State Core
-let todoState = {
+// Default layout configuration used for fresh system footprints
+const DEFAULT_STATE = {
     items: [
         { id: 1, text: "Verify preprocessor script compilation" },
         { id: 2, text: "Test Blob execution on target handset" }
     ]
 };
 
-// Render engine loop
+// UI Rendering Engine Loop (Plain function approach for app-specific tasks)
 function renderTasks() {
     const container = document.getElementById('taskList');
     container.innerHTML = '';
 
-    if (todoState.items.length === 0) {
+    if (!runtimeState.todoData.items || runtimeState.todoData.items.length === 0) {
         container.innerHTML = '<p style="font-style: italic; color: #888;">No tasks listed.</p>';
         return;
     }
 
-    todoState.items.forEach(item => {
+    runtimeState.todoData.items.forEach(item => {
         const row = document.createElement('div');
         row.className = 'todo-item';
         
@@ -321,32 +413,140 @@ function addNewTask() {
         text: text
     };
 
-    todoState.items.push(newItem);
+    runtimeState.todoData.items.push(newItem);
     input.value = '';
+    saveAndSyncStorage();
     renderTasks();
 }
 
 function removeTask(id) {
-    todoState.items = todoState.items.filter(item => item.id !== id);
+    runtimeState.todoData.items = runtimeState.todoData.items.filter(item => item.id !== id);
+    saveAndSyncStorage();
     renderTasks();
 }
 
-// IO Integrations using shared/utils.js abstractions
-function handleBackup() {
-    exportAppState(todoState, "example_app_backup.json");
+async function saveAndSyncStorage() {
+    const envelope = {
+        appId: APP_CONFIG.appId,
+        version: APP_CONFIG.version,
+        encrypted: APP_CONFIG.encrypted,
+        cryptoMetadata: {},
+        payload: ""
+    };
+
+    if (APP_CONFIG.encrypted && runtimeState.masterKey) {
+        // Run data through the real AES-GCM pipeline
+        const rawString = JSON.stringify(runtimeState.todoData);
+        const result = await encryptPayload(rawString, runtimeState.masterKey);
+        
+        envelope.cryptoMetadata = {
+            salt: result.salt,
+            iv: result.iv
+        };
+        envelope.payload = result.ciphertext;
+    } else {
+        envelope.payload = runtimeState.todoData;
+    }
+
+    localStorage.setItem(APP_CONFIG.appId, JSON.stringify(envelope));
+    return envelope;
 }
 
-// Wire up the upload listener on application init
-document.addEventListener('DOMContentLoaded', () => {
-    renderTasks();
-    
-    initializeAppImporter('importPicker', (parsedJSON) => {
-        if (parsedJSON && Array.isArray(parsedJSON.items)) {
-            todoState = parsedJSON;
-            renderTasks();
-        } else {
-            alert("Invalid backup schema detected.");
+// Component Ingestion & State Bootloader
+function triggerLockscreenUI(isFresh = false) {
+    const lockscreen = document.createElement('app-lockscreen');
+    lockscreen.setAttribute('title', isFresh ? 'Create Master Passphrase' : 'Database Locked');
+    lockscreen.setAttribute('desc', isFresh ? 'Set a password to encrypt your local app database.' : 'Enter your password to decrypt your data.');
+    if (isFresh) lockscreen.setAttribute('fresh-run', '');
+
+    lockscreen.addEventListener('app-unlock', async (e) => {
+        const password = e.detail.password;
+        
+        try {
+            if (isFresh) {
+                runtimeState.masterKey = password;
+                runtimeState.todoData = DEFAULT_STATE;
+                await saveAndSyncStorage(); // Await storage sync completion
+                lockscreen.remove();
+                document.getElementById('appWorkspace').style.display = 'block';
+                renderTasks();
+            } else {
+                const rawStored = localStorage.getItem(APP_CONFIG.appId);
+                const envelope = JSON.parse(rawStored);
+
+                // Execute actual Web Crypto AES-GCM translation pass
+                const decryptedString = await decryptPayload(
+                    envelope.payload,
+                    password,
+                    envelope.cryptoMetadata.salt,
+                    envelope.cryptoMetadata.iv
+                );
+
+                // If string decrypts into correct syntax, assign keys to runtime tracking state
+                runtimeState.masterKey = password;
+                runtimeState.todoData = JSON.parse(decryptedString);
+                
+                lockscreen.remove();
+                document.getElementById('appWorkspace').style.display = 'block';
+                renderTasks();
+            }
+        } catch (err) {
+            console.error(err);
+            lockscreen.showError(); // Handles wrong passwords flawlessly because decryption crashes natively
         }
+    });
+    lockscreen.addEventListener('app-reset', () => {
+        localStorage.removeItem(APP_CONFIG.appId);
+        location.reload();
+    });
+
+    document.body.appendChild(lockscreen);
+}
+
+// Application Lifecycle Event Listeners
+document.addEventListener('DOMContentLoaded', () => {
+    const storedData = localStorage.getItem(APP_CONFIG.appId);
+    const ioComponent = document.getElementById('dataManager');
+    
+
+    // 1. Initialize and Mount the Lockscreen Loader
+    const lock = document.createElement('app-lockscreen');
+    lock.setAttribute('app-id', APP_CONFIG.appId);
+    if (APP_CONFIG.encrypted) lock.setAttribute('encrypted', '');
+
+    // 2. Simply receive verified cleartext data on a successful unlock
+    lock.addEventListener('app-unlocked-success', (e) => {
+        const { password, data, isFreshRun } = e.detail;
+        
+        runtimeState.masterKey = password;
+        runtimeState.todoData = isFreshRun ? DEFAULT_STATE : data;
+        
+        if (isFreshRun) saveAndSyncStorage(); // Initial seed commit to storage disk
+        
+        document.getElementById('appWorkspace').style.display = 'block';
+        renderTasks();
+    });
+
+    document.body.appendChild(lock);
+
+    // ----------------------
+
+    // 1. Hand over raw data and the hidden RAM password when component requests export
+    ioComponent.addEventListener('app-export-request', (e) => {
+        e.detail.rawData = runtimeState.todoData;
+        e.detail.masterKey = runtimeState.masterKey;
+    });
+
+    // 2. Hand over active session key for verification checks during imports
+    ioComponent.addEventListener('app-key-request', (e) => {
+        e.detail.masterKey = runtimeState.masterKey;
+    });
+
+    // 3. Catch clean, processed data packages seamlessly
+    ioComponent.addEventListener('app-import-success', (e) => {
+        runtimeState.todoData = e.detail.data;
+        saveAndSyncStorage(); // Syncs down to local storage snapshot
+        renderTasks();        // Redraws the view list
     });
 });
     </script>
