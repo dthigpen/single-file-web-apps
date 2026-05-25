@@ -4,6 +4,8 @@ theme:
   name: material
   palette:
     scheme: slate # Clean dark mode out of the box
+hooks:
+  - hooks.py
 
 nav:
   - Home: index.md
