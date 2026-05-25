@@ -1,29 +1,58 @@
-// totp_app/app.js
-
-const STORAGE_KEY = "vault_encrypted_data";
+// Universal App Identity Metadata
+const APP_CONFIG = {
+    appId: "totp-vault",
+    version: "1.0.0",
+    encrypted: true
+};
 
 const DEMO_DATA = [
     { label: "DEMO: GitHub Sandbox", secret: "JBSWY3DPEHPK3PXP", period: 30 },
     { label: "DEMO: Nextcloud Admin", secret: "ORXW233SMVZA4===", period: 30 }
 ];
 
-let activeKeys = [];
-let isDemoMode = false;
+// Volatile Runtime Memory (Purged cleanly on tab close or page loss)
+let runtimeState = {
+    masterKey: null,
+    activeKeys: [],
+    isDemoMode: false
+};
 
-// Dynamic rendering
+// Storage Packing & Crypto Pipelines
+async function saveAndSyncStorage() {
+    const envelope = {
+        appId: APP_CONFIG.appId,
+        version: APP_CONFIG.version,
+        encrypted: APP_CONFIG.encrypted,
+        cryptoMetadata: {},
+        payload: ""
+    };
+
+    if (APP_CONFIG.encrypted && runtimeState.masterKey) {
+        const rawString = JSON.stringify(runtimeState.activeKeys);
+        const result = await encryptPayload(rawString, runtimeState.masterKey);
+        
+        envelope.cryptoMetadata = {
+            salt: result.salt,
+            iv: result.iv
+        };
+        envelope.payload = result.ciphertext;
+    } else {
+        envelope.payload = runtimeState.activeKeys;
+    }
+
+    localStorage.setItem(APP_CONFIG.appId, JSON.stringify(envelope));
+    return envelope;
+}
+
+// Dynamic UI Rendering Engine Loop
 function buildUI() {
     const listContainer = document.getElementById("vault-list");
     listContainer.innerHTML = "";
 
     const onboarding = document.getElementById("onboarding-container");
-    onboarding.style.display = isDemoMode ? "block" : "none";
+    onboarding.style.display = runtimeState.isDemoMode ? "block" : "none";
 
-    if (!window.crypto || !window.crypto.subtle) {
-        listContainer.innerHTML = "<div style='color:red; font-size:12px; padding:8px;'>ERR: Insecure context! Open via local file system or HTTPS.</div>";
-        return;
-    }
-
-    activeKeys.forEach((item, index) => {
+    runtimeState.activeKeys.forEach((item, index) => {
         const card = document.createElement("div");
         card.className = "code-card";
         card.tabIndex = 0; 
@@ -31,7 +60,7 @@ function buildUI() {
         const label = document.createElement("div");
         label.className = "account-label";
         
-        if (isDemoMode) {
+        if (runtimeState.isDemoMode) {
             const badge = document.createElement("span");
             badge.className = "demo-badge";
             badge.textContent = "Demo";
@@ -64,27 +93,23 @@ function buildUI() {
     });
 
     populateProvisionerTextarea();
-    tickEngine();
 }
 
 function populateProvisionerTextarea() {
     const textarea = document.getElementById("setup-raw");
-    if (!textarea || isDemoMode) return;
+    if (!textarea || runtimeState.isDemoMode) return;
 
-    const rawLines = activeKeys.map(item => {
-        const period = item.period || 30;
-        return item.label + "," + item.secret + "," + period;
+    const rawLines = runtimeState.activeKeys.map(item => {
+        return `${item.label},${item.secret},${item.period || 30}`;
     });
     textarea.value = rawLines.join("\n");
 }
 
 async function tickEngine() {
-    if (!window.crypto || !window.crypto.subtle) return;
-    
     const epoch = Math.floor(Date.now() / 1000);
     let minGlobalTime = 999;
 
-    activeKeys.forEach((item, index) => {
+    runtimeState.activeKeys.forEach((item, index) => {
         const period = item.period || 30;
         const remaining = period - (epoch % period);
         
@@ -103,44 +128,70 @@ async function tickEngine() {
         }
     });
 
-    document.getElementById("global-timer").textContent = minGlobalTime + "s";
+    // const globalTimer = document.getElementById("global-timer");
+    // if (globalTimer) globalTimer.textContent = minGlobalTime + "s";
 }
 
-async function initVault() {
-    const localData = localStorage.getItem(STORAGE_KEY);
+// State Bootloader System
+// State Bootloader System
+document.addEventListener('DOMContentLoaded', () => {
+    const ioComponent = document.getElementById('dataManager');
+    const storedData = localStorage.getItem(APP_CONFIG.appId);
 
-    if (!localData || localData.trim() === "") {
-        isDemoMode = true;
-        activeKeys = DEMO_DATA;
+    // 1. Initial Storage Assessment
+    if (!storedData) {
+        // No storage data: Load standard demo profile automatically
+        runtimeState.isDemoMode = true;
+        runtimeState.activeKeys = DEMO_DATA;
+        
+        // ✨ Reveal workspace immediately since there's no password yet
+        document.getElementById('appWorkspace').style.display = 'block'; 
         buildUI();
         setInterval(tickEngine, 1000);
-        return;
+    } else {
+        // Active data found: Initialize the Component Loader
+        const lock = document.createElement('app-lockscreen');
+        lock.setAttribute('app-id', APP_CONFIG.appId);
+        lock.setAttribute('app-name', 'TOTP Vault');
+        lock.setAttribute('custom-desc', 'Access tokens will remain hidden until decrypted.');
+        if (APP_CONFIG.encrypted) lock.setAttribute('encrypted', '');
+
+        lock.addEventListener('app-unlocked-success', (e) => {
+            const { password, data } = e.detail;
+            
+            runtimeState.isDemoMode = false;
+            runtimeState.masterKey = password;
+            runtimeState.activeKeys = data;
+            
+            // ✨ Reveal workspace ONLY after successful passphrase entry
+            document.getElementById('appWorkspace').style.display = 'block'; 
+            buildUI();
+            setInterval(tickEngine, 1000);
+        });
+
+        document.body.appendChild(lock);
     }
 
-    isDemoMode = false;
-    let decryptedStr = null;
-    
-    while (decryptedStr === null) {
-        let pass = prompt("Enter Master Password to open secure vault:");
-        if (pass === null) {
-            isDemoMode = true;
-            activeKeys = DEMO_DATA;
-            break;
-        }
-        try {
-            decryptedStr = await decryptPayload(localData, pass);
-            activeKeys = JSON.parse(decryptedStr);
-        } catch (err) {
-            alert("Invalid Password. Decryption failed.");
-            decryptedStr = null;
-        }
-    }
+    // 2. Data Management Subscriptions (Keep these exactly the same)
+    ioComponent.addEventListener('app-export-request', (e) => {
+        e.detail.rawData = runtimeState.activeKeys;
+        e.detail.masterKey = runtimeState.masterKey;
+    });
 
-    buildUI();
-    setInterval(tickEngine, 1000);
-}
+    ioComponent.addEventListener('app-key-request', (e) => {
+        e.detail.masterKey = runtimeState.masterKey;
+    });
 
-// Interactive Subscriptions
+    ioComponent.addEventListener('app-import-success', async (e) => {
+        runtimeState.isDemoMode = false;
+        runtimeState.activeKeys = e.detail.data;
+        await saveAndSyncStorage();
+        buildUI();
+        tickEngine();
+    });
+});
+
+// Interactive Workspace Controls
 document.getElementById("toggle-setup-btn").addEventListener("click", () => {
     const pane = document.getElementById("setup-pane");
     pane.style.display = (pane.style.display === "block") ? "none" : "block";
@@ -149,59 +200,17 @@ document.getElementById("toggle-setup-btn").addEventListener("click", () => {
     }
 });
 
-// File Import Handler with strict Passphrase Validation Gate
-document.getElementById("file-load-btn").addEventListener("click", () => {
-    const fileInput = document.getElementById("import-file-input");
-    const passwordInput = document.getElementById("import-file-pass").value;
-
-    if (!fileInput.files.length) {
-        alert("Please select a vault payload file first.");
-        return;
-    }
-    if (!passwordInput) {
-        alert("You must supply the validation passphrase to test the file container.");
-        return;
-    }
-
-    const file = fileInput.files[0];
-    const reader = new FileReader();
-
-    reader.onload = async function(e) {
-        const rawContentString = e.target.result.trim();
-        
-        try {
-            // Attempt decryption check *before* writing anything to localStorage
-            await decryptPayload(rawContentString, passwordInput);
-            
-            // Verification passed safely
-            localStorage.setItem(STORAGE_KEY, rawContentString);
-            alert("Success! File verified and loaded to storage. Restarting application context...");
-            window.location.reload();
-        } catch (err) {
-            alert("Lockout Prevention Block: The passphrase provided could not unlock the selected file structure. Storage was not updated.");
-        }
-    };
-
-    reader.readAsText(file);
-});
-
-// New Account Collection Creation with Confirmation matching checks
+// Manual Text Compilation Parser Button
+// Manual Text Compilation Parser Button
 document.getElementById("encrypt-trigger-btn").addEventListener("click", async () => {
     const rawText = document.getElementById("setup-raw").value.trim();
-    const passphrase = document.getElementById("setup-pass").value;
-    const confirmPassphrase = document.getElementById("setup-pass-confirm").value;
 
-    if (!rawText || !passphrase) {
-        alert("Both credentials data arrays and passphrase values are required elements.");
+    if (!rawText) {
+        alert("Credentials field cannot be left blank.");
         return;
     }
 
-    // Double-check block comparison
-    if (passphrase !== confirmPassphrase) {
-        alert("Input Mismatch: The passphrase and confirmation pass blocks do not match.");
-        return;
-    }
-
+    // 1. Parse the text fields into a clean array first
     const parsedEntries = [];
     const lines = rawText.split("\n");
     for (let line of lines) {
@@ -216,18 +225,42 @@ document.getElementById("encrypt-trigger-btn").addEventListener("click", async (
         parsedEntries.push({ label, secret, period });
     }
 
+    // handle setting up keys for first time, from demo mode
+    if (runtimeState.isDemoMode && !runtimeState.masterKey) {
+        // Intercept execution and spin up the initialization lockscreen wrapper!
+        const lock = document.createElement('app-lockscreen');
+        lock.setAttribute('app-id', APP_CONFIG.appId);
+        // Force the lockscreen into "Create Passphrase" mode
+        lock.setAttribute('fresh-run', ''); 
+
+        lock.addEventListener('app-unlocked-success', async (e) => {
+            // Capture the password they just created
+            runtimeState.masterKey = e.detail.password;
+            runtimeState.isDemoMode = false;
+            runtimeState.activeKeys = parsedEntries;
+
+            // Commit the freshly encrypted payload to storage disk safely
+            await saveAndSyncStorage();
+            
+            // Clean up the display panels
+            document.getElementById("setup-pane").style.display = "none";
+            buildUI();
+            tickEngine();
+            alert("Vault created and secured successfully!");
+        });
+
+        document.body.appendChild(lock);
+        return; // Halt main thread until the component callback fires successfully
+    }
+
+    // 3. Normal Flow: User is already unlocked/logged in, just overwrite and save
     try {
-        const cipherText = await encryptPayload(JSON.stringify(parsedEntries), passphrase);
-        
-        localStorage.setItem(STORAGE_KEY, cipherText);
-        
-        document.getElementById("setup-output").textContent = cipherText;
-        document.getElementById("setup-output-container").style.display = "block";
-        
-        alert("Vault written and saved successfully!");
+        runtimeState.activeKeys = parsedEntries;
+        await saveAndSyncStorage();
+        buildUI();
+        tickEngine();
+        alert("Vault successfully updated in storage!");
     } catch (err) {
-        alert("Compilation failed: " + err.message);
+        alert("Save failure: " + err.message);
     }
 });
-
-window.addEventListener("DOMContentLoaded", initVault);
