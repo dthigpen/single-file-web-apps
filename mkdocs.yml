@@ -1,0 +1,14 @@
+site_name: Single File Web Apps
+site_url: https://dthigpen.github.io/single-file-web-apps/
+theme:
+  name: material
+  palette:
+    scheme: slate # Clean dark mode out of the box
+
+nav:
+  - Home: index.md
+  - Architecture: architecture.md
+  - Get Started: get-started.md
+  - Development: development.md
+  - Apps:
+      - TOTP Vault: apps/totp_app.md
