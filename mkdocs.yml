@@ -11,6 +11,6 @@ nav:
   - Home: index.md
   - Architecture: architecture.md
   - Get Started: get-started.md
-  # - Development: development.md
+  - Development: development.md
   - Apps:
       - TOTP Vault: apps/totp_app.md
