@@ -5,13 +5,12 @@ const APP_CONFIG = {
     encrypted: true
 };
 
-// Volatile Runtime Memory (Purged cleanly on tab close or page loss)
+// Volatile Runtime Memory Data Layers
 let runtimeState = {
     masterKey: null, 
     todoData: { items: [] }
 };
 
-// Default layout configuration used for fresh system footprints
 const DEFAULT_STATE = {
     items: [
         { id: 1, text: "Verify preprocessor script compilation" },
@@ -19,58 +18,98 @@ const DEFAULT_STATE = {
     ]
 };
 
-// UI Rendering Engine Loop (Plain function approach for app-specific tasks)
-function renderTasks() {
-    const container = document.getElementById('taskList');
-    container.innerHTML = '';
+// ==========================================
+// The Ultimate Immediate-Mode UI Engine
+// ==========================================
+function render() {
+    const workspace = document.getElementById('appWorkspace');
 
-    if (!runtimeState.todoData.items || runtimeState.todoData.items.length === 0) {
-        container.innerHTML = '<p style="font-style: italic; color: #888;">No tasks listed.</p>';
-        return;
-    }
+    // Build the tasks inner list array using template mapping strings
+    const taskRowsHtml = runtimeState.todoData.items.length === 0
+        ? `<p style="font-style: italic; color: #888; text-align: center; padding: 12px;">No tasks listed. Add one below!</p>`
+        : runtimeState.todoData.items.map(item => `
+            <div class="todo-item" data-id="${item.id}" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; padding: 4px; border-bottom: 1px dashed #ccc;">
+                <span class="todo-text" style="font-size: 13px;">${item.text}</span> <button class="btn-secondary" data-action="delete" style="padding: 2px 8px; font-size: 11px;">Remove</button>
+            </div>
+          `).join('');
 
-    runtimeState.todoData.items.forEach(item => {
-        const row = document.createElement('div');
-        row.className = 'todo-item';
+    // Generate the complete unified layout structure directly in memory
+    const templateUI = html`
+        <div id="appWorkspace">
+            <div class="card">
+                <h1>Example Task Utility</h1>
+                <p>Demonstrates single-file compilation and shared asset modules.</p>
+            </div>
+
+            <div class="card">
+                <h2>Add Task</h2>
+                <form id="task-form" style="display: flex; gap: 8px;">
+                    <input type="text" id="taskInput" placeholder="Enter task name..." style="flex: 1; padding: 6px;">
+                    <button type="submit" class="btn">Add Entry</button>
+                </form>
+            </div>
+
+            <div class="card">
+                <h2>Active Tasks</h2>
+                <div id="taskList">
+                    ${taskRowsHtml} </div>
+            </div>
+
+            <app-data-io id="dataManager" app-id="example-tasks"></app-data-io>
+        </div>
+    `;
+
+    // Run the differential morph engine step to sync layout changes seamlessly
+    morphDOM(workspace, templateUI);
+}
+
+// ==========================================
+// Centralized Event Delegation Portal
+// ==========================================
+function setupGlobalEventHandlers() {
+    const workspace = document.getElementById('appWorkspace');
+
+    // Portal Click Capturer for Task Actions
+    workspace.addEventListener('click', async (e) => {
+        const target = e.target;
+        const action = target.getAttribute('data-action');
+        if (action !== 'delete') return;
+
+        const row = target.closest('.todo-item');
+        const itemId = parseInt(row.getAttribute('data-id'), 10);
+
+        // Mutate Raw Data State
+        runtimeState.todoData.items = runtimeState.todoData.items.filter(item => item.id !== itemId);
         
-        const label = document.createElement('span');
-        label.className = 'todo-text';
-        label.innerText = item.text;
-        
-        const deleteBtn = document.createElement('button');
-        deleteBtn.className = 'btn-secondary';
-        deleteBtn.innerText = 'Remove';
-        deleteBtn.style.padding = '4px 8px';
-        deleteBtn.onclick = () => removeTask(item.id);
+        await saveAndSyncStorage();
+        render(); // Re-render updates everything cleanly
+    });
 
-        row.appendChild(label);
-        row.appendChild(deleteBtn);
-        container.appendChild(row);
+    // Portal Form Submit Capturer for Add Action
+    workspace.addEventListener('submit', async (e) => {
+        if (e.target.id !== 'task-form') return;
+        e.preventDefault(); // Block full page reload trigger
+
+        const input = document.getElementById('taskInput');
+        const text = input.value.trim();
+        if (!text) return;
+
+        runtimeState.todoData.items.push({
+            id: Date.now(),
+            text: text
+        });
+
+        await saveAndSyncStorage();
+        render(); // Morph changes across layout tree
+        
+        // Refocus the input box immediately for clean sequential entries
+        document.getElementById('taskInput').focus(); 
     });
 }
 
-function addNewTask() {
-    const input = document.getElementById('taskInput');
-    const text = input.value.trim();
-    if (!text) return;
-
-    const newItem = {
-        id: Date.now(),
-        text: text
-    };
-
-    runtimeState.todoData.items.push(newItem);
-    input.value = '';
-    saveAndSyncStorage();
-    renderTasks();
-}
-
-function removeTask(id) {
-    runtimeState.todoData.items = runtimeState.todoData.items.filter(item => item.id !== id);
-    saveAndSyncStorage();
-    renderTasks();
-}
-
+// ==========================================
+// Secure Encryption Data Sync Loop
+// ==========================================
 async function saveAndSyncStorage() {
     const envelope = {
         appId: APP_CONFIG.appId,
@@ -81,14 +120,9 @@ async function saveAndSyncStorage() {
     };
 
     if (APP_CONFIG.encrypted && runtimeState.masterKey) {
-        // Run data through the real AES-GCM pipeline
         const rawString = JSON.stringify(runtimeState.todoData);
         const result = await encryptPayload(rawString, runtimeState.masterKey);
-        
-        envelope.cryptoMetadata = {
-            salt: result.salt,
-            iv: result.iv
-        };
+        envelope.cryptoMetadata = { salt: result.salt, iv: result.iv };
         envelope.payload = result.ciphertext;
     } else {
         envelope.payload = runtimeState.todoData;
@@ -98,102 +132,48 @@ async function saveAndSyncStorage() {
     return envelope;
 }
 
-// Component Ingestion & State Bootloader
-function triggerLockscreenUI(isFresh = false) {
-    const lockscreen = document.createElement('app-lockscreen');
-    lockscreen.setAttribute('title', isFresh ? 'Create Master Passphrase' : 'Database Locked');
-    lockscreen.setAttribute('desc', isFresh ? 'Set a password to encrypt your local app database.' : 'Enter your password to decrypt your data.');
-    lock.setAttribute('app-name', 'Task List');
-    lock.setAttribute('custom-desc', 'Tasks will remain hidden until decrypted.');
-    if (isFresh) lockscreen.setAttribute('fresh-run', '');
-
-    lockscreen.addEventListener('app-unlock', async (e) => {
-        const password = e.detail.password;
-        
-        try {
-            if (isFresh) {
-                runtimeState.masterKey = password;
-                runtimeState.todoData = DEFAULT_STATE;
-                await saveAndSyncStorage(); // Await storage sync completion
-                lockscreen.remove();
-                document.getElementById('appWorkspace').style.display = 'block';
-                renderTasks();
-            } else {
-                const rawStored = localStorage.getItem(APP_CONFIG.appId);
-                const envelope = JSON.parse(rawStored);
-
-                // Execute actual Web Crypto AES-GCM translation pass
-                const decryptedString = await decryptPayload(
-                    envelope.payload,
-                    password,
-                    envelope.cryptoMetadata.salt,
-                    envelope.cryptoMetadata.iv
-                );
-
-                // If string decrypts into correct syntax, assign keys to runtime tracking state
-                runtimeState.masterKey = password;
-                runtimeState.todoData = JSON.parse(decryptedString);
-                
-                lockscreen.remove();
-                document.getElementById('appWorkspace').style.display = 'block';
-                renderTasks();
-            }
-        } catch (err) {
-            console.error(err);
-            lockscreen.showError(); // Handles wrong passwords flawlessly because decryption crashes natively
-        }
-    });
-    lockscreen.addEventListener('app-reset', () => {
-        localStorage.removeItem(APP_CONFIG.appId);
-        location.reload();
-    });
-
-    document.body.appendChild(lockscreen);
-}
-
-// Application Lifecycle Event Listeners
+// ==========================================
+// Lifecycle Application Bootloader
+// ==========================================
 document.addEventListener('DOMContentLoaded', () => {
     const storedData = localStorage.getItem(APP_CONFIG.appId);
     const ioComponent = document.getElementById('dataManager');
     
+    // Mount persistent delegation hubs early on the top shell
+    setupGlobalEventHandlers();
 
-    // 1. Initialize and Mount the Lockscreen Loader
     const lock = document.createElement('app-lockscreen');
     lock.setAttribute('app-id', APP_CONFIG.appId);
+    lock.setAttribute('app-name', 'Task List');
     if (APP_CONFIG.encrypted) lock.setAttribute('encrypted', '');
 
-    // 2. Simply receive verified cleartext data on a successful unlock
-    lock.addEventListener('app-unlocked-success', (e) => {
+    lock.addEventListener('app-unlocked-success', async (e) => {
         const { password, data, isFreshRun } = e.detail;
         
         runtimeState.masterKey = password;
         runtimeState.todoData = isFreshRun ? DEFAULT_STATE : data;
         
-        if (isFreshRun) saveAndSyncStorage(); // Initial seed commit to storage disk
+        if (isFreshRun) await saveAndSyncStorage();
         
         document.getElementById('appWorkspace').style.display = 'block';
-        renderTasks();
+        render(); // Launch the first complete application visualization build
     });
 
     document.body.appendChild(lock);
 
-    // ----------------------
-
-    // 1. Hand over raw data and the hidden RAM password when component requests export
+    // Bind clean data management interface events cleanly
     ioComponent.addEventListener('app-export-request', (e) => {
         e.detail.rawData = runtimeState.todoData;
         e.detail.masterKey = runtimeState.masterKey;
     });
 
-    // 2. Hand over active session key for verification checks during imports
     ioComponent.addEventListener('app-key-request', (e) => {
         e.detail.masterKey = runtimeState.masterKey;
     });
 
-    // 3. Catch clean, processed data packages seamlessly
-    ioComponent.addEventListener('app-import-success', (e) => {
+    ioComponent.addEventListener('app-import-success', async (e) => {
         runtimeState.todoData = e.detail.data;
-        saveAndSyncStorage(); // Syncs down to local storage snapshot
-        renderTasks();        // Redraws the view list
+        await saveAndSyncStorage();
+        render();
     });
 });

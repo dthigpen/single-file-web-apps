@@ -9,30 +9,13 @@
     </style>
 </head>
 <body>
-    <div id="appWorkspace" style="display: none;">
-        <div class="card">
-            <h1>Example Task Utility</h1>
-            <p>Demonstrates single-file compilation and shared asset modules.</p>
-        </div>
-
-        <div class="card">
-            <h2>Add Task</h2>
-            <input type="text" id="taskInput" placeholder="Enter task name...">
-            <button onclick="addNewTask()">Add Entry</button>
-        </div>
-
-        <div class="card">
-            <h2>Active Tasks</h2>
-            <div id="taskList"></div>
-        </div>
-
-        <app-data-io id="dataManager" app-id="example-tasks"></app-data-io>
-    </div>
+    <div id="appWorkspace" style="display: none;"></div>
 
     <script>
+        /* {{include: shared/utils.js}} */
+        /* {{include: shared/crypto.js}} */
         /* {{include: shared/lockscreen.js}} */
         /* {{include: shared/data-io.js}} */
-        /* {{include: shared/crypto.js}} */
         /* {{include: example_app/app.js}} */
     </script>
 </body>

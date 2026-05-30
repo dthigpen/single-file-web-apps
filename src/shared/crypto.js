@@ -1,13 +1,23 @@
 /**
- * Derives a deterministic cryptographic key from a password string via PBKDF2.
+ * Safely derives an AES-GCM crypto key from a raw text passphrase using PBKDF2.
  */
-async function deriveCryptoKey(password, saltBuffer) {
+async function deriveKey(passphrase, salt) {
     const encoder = new TextEncoder();
-    const baseKey = await window.crypto.subtle.importKey(
-        "raw", encoder.encode(password), "PBKDF2", false, ["deriveKey"]
+    const baseKey = await crypto.subtle.importKey(
+        "raw",
+        encoder.encode(passphrase),
+        "PBKDF2",
+        false,
+        ["deriveKey"]
     );
-    return window.crypto.subtle.deriveKey(
-        { name: "PBKDF2", salt: saltBuffer, iterations: 100000, hash: "SHA-256" },
+    
+    return crypto.subtle.deriveKey(
+        {
+            name: "PBKDF2",
+            salt: salt,
+            iterations: 100000,
+            hash: "SHA-256"
+        },
         baseKey,
         { name: "AES-GCM", length: 256 },
         false,
@@ -16,45 +26,48 @@ async function deriveCryptoKey(password, saltBuffer) {
 }
 
 /**
- * Encrypts a plaintext string with AES-GCM 256.
- * Returns an object matching the schema cryptoMetadata setup.
+ * Encrypts a cleartext string using a plain text passphrase.
+ * Returns an envelope containing the ciphertext and crypto metadata as hex strings.
  */
-async function encryptPayload(plainText, password) {
+export async function encryptPayload(cleartext, passphrase) {
     const encoder = new TextEncoder();
-    const salt = window.crypto.getRandomValues(new Uint8Array(16));
-    const iv = window.crypto.getRandomValues(new Uint8Array(12));
-    const key = await deriveCryptoKey(password, salt);
+    const salt = crypto.getRandomValues(new Uint8Array(16));
+    const iv = crypto.getRandomValues(new Uint8Array(12));
     
-    const cipherBuf = await window.crypto.subtle.encrypt(
+    const aesKey = await deriveKey(passphrase, salt);
+    const ciphertextBuffer = await crypto.subtle.encrypt(
         { name: "AES-GCM", iv: iv },
-        key,
-        encoder.encode(plainText)
+        aesKey,
+        encoder.encode(cleartext)
     );
 
-    // Convert separate buffers to simple Base64 strings for the JSON envelope
+    // Convert binary buffers into easily storable hex strings
     return {
-        salt: btoa(String.fromCharCode(...salt)),
-        iv: btoa(String.fromCharCode(...iv)),
-        ciphertext: btoa(String.fromCharCode(...new Uint8Array(cipherBuf)))
+        payload: Array.from(new Uint8Array(ciphertextBuffer)).map(b => b.toString(16).padStart(2, '0')).join(''),
+        cryptoMetadata: {
+            salt: Array.from(salt).map(b => b.toString(16).padStart(2, '0')).join(''),
+            iv: Array.from(iv).map(b => b.toString(16).padStart(2, '0')).join('')
+        }
     };
 }
 
 /**
- * Decrypts individual Base64 parts with AES-GCM 256.
+ * Decrypts a hex ciphertext string back into cleartext using the passphrase and metadata.
  */
-async function decryptPayload(ciphertextB64, password, saltB64, ivB64) {
-    const toBuf = (b64) => Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+export async function decryptPayload(ciphertextHex, passphrase, saltHex, ivHex) {
+    const decoder = new TextDecoder();
     
-    const salt = toBuf(saltB64);
-    const iv = toBuf(ivB64);
-    const cipherBuf = toBuf(ciphertextB64);
-
-    const key = await deriveCryptoKey(password, salt);
-    const plainBuf = await window.crypto.subtle.decrypt(
+    // Convert hex strings back into binary arrays
+    const salt = new Uint8Array(saltHex.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
+    const iv = new Uint8Array(ivHex.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
+    const ciphertext = new Uint8Array(ciphertextHex.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
+    
+    const aesKey = await deriveKey(passphrase, salt);
+    const decryptedBuffer = await crypto.subtle.decrypt(
         { name: "AES-GCM", iv: iv },
-        key,
-        cipherBuf
+        aesKey,
+        ciphertext
     );
-
-    return new TextDecoder().decode(plainBuf);
+    
+    return decoder.decode(decryptedBuffer);
 }

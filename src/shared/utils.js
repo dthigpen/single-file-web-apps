@@ -1,3 +1,20 @@
+/* {{include: shared/vendor/morphdom.js}} */ // ◄ Seamlessly inlined by your python preprocessor
+
+// Fallback handling wrapper to expose morphdom safely across common scopes
+const morphDOM = (typeof morphdom === 'function') 
+    ? morphdom 
+    : (window.morphdom ? window.morphdom.default || window.morphdom : null);
+
+if (!morphDOM) {
+    console.error("Critical Lifecycle Error: morphdom layout reconciliation engine failed to initialize.");
+}
+
+
+// Safely escapes untrusted data values to completely prevent XSS injection vectors
+function escapeHtml(str) {
+    if (typeof str !== 'string') return str;
+    return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
 
 /**
  * Normalizes a Base32 string into a standard byte buffer.
