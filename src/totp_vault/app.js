@@ -3,12 +3,12 @@ import { useEffect } from 'preact/hooks';
 import { useSignal, useComputed } from '@preact/signals';
 import htm from 'htm';
 
-import { 
-    isUnlocked, 
-    globalVault, 
-    addCredential, 
+import {
+    isUnlocked,
+    globalVault,
+    addCredential,
     updateCredential,
-    deleteCredential, 
+    deleteCredential,
     timeStepTicker,
     exportVaultFile,
     importVaultFile,
@@ -39,7 +39,7 @@ function TokenRow({ item }) {
 
     useEffect(() => {
         generateTOTP(item.secret)
-            .then(code => {
+            .then((code) => {
                 activeToken.value = code;
                 errState.value = false;
             })
@@ -66,10 +66,12 @@ function TokenRow({ item }) {
             <div class="card" style="border-left: 3px solid #0066cc;">
                 <form onSubmit=${handleSaveEdit}>
                     <span style="font-size: 0.75rem; font-weight: bold; color: #666;">Edit Account</span>
-                    <input type="text" value=${editLabel} onInput=${e => editLabel.value = e.target.value} placeholder="Label" />
-                    <input type="text" value=${editSecret} onInput=${e => editSecret.value = e.target.value} placeholder="Secret" />
+                    <input type="text" value=${editLabel} onInput=${(e) => (editLabel.value = e.target.value)} placeholder="Label" />
+                    <input type="text" value=${editSecret} onInput=${(e) => (editSecret.value = e.target.value)} placeholder="Secret" />
                     <div style="display: flex; gap: 4px; justify-content: flex-end;">
-                        <button type="button" class="btn-secondary" onClick=${() => { isEditing.value = false; }} style="height: 28px; font-size: 0.8rem; padding: 0 8px;">Cancel</button>
+                        <button type="button" class="btn-secondary" onClick=${() => {
+                            isEditing.value = false;
+                        }} style="height: 28px; font-size: 0.8rem; padding: 0 8px;">Cancel</button>
                         <button type="submit" style="height: 28px; font-size: 0.8rem; padding: 0 8px;">Save</button>
                     </div>
                 </form>
@@ -93,7 +95,7 @@ function TokenRow({ item }) {
                     ${formattedToken}
                 </div>
                 <div style="display: flex; gap: 4px;">
-                    <button onClick=${() => isEditing.value = true} class="btn-secondary" style="height: 24px; padding: 0 6px; font-size: 0.75rem; width: auto;">Edit</button>
+                    <button onClick=${() => (isEditing.value = true)} class="btn-secondary" style="height: 24px; padding: 0 6px; font-size: 0.75rem; width: auto;">Edit</button>
                     <button onClick=${() => deleteCredential(item.id)} class="btn-secondary" style="height: 24px; padding: 0 6px; font-size: 0.75rem; width: auto; color: #cc0000; border-color: #ffd1d1;">Del</button>
                 </div>
             </div>
@@ -131,7 +133,7 @@ function TotpAppRoot() {
         e.preventDefault();
         formError.value = '';
         if (!newLabel.value.trim() || !newSecret.value.trim()) {
-            formError.value = "Required fields blank.";
+            formError.value = 'Required fields blank.';
             return;
         }
         addCredential(newLabel.value, newSecret.value);
@@ -188,13 +190,13 @@ function TotpAppRoot() {
         rotationSuccessMessage.value = '';
 
         if (!newMasterPassword.value || newMasterPassword.value !== confirmMasterPassword.value) {
-            importError.value = "Entries mismatch.";
+            importError.value = 'Entries mismatch.';
             return;
         }
 
         try {
             await rotateMasterPassphrase(newMasterPassword.value);
-            rotationSuccessMessage.value = "Passphrase rotated!";
+            rotationSuccessMessage.value = 'Passphrase rotated!';
             newMasterPassword.value = '';
             confirmMasterPassword.value = '';
         } catch (err) {
@@ -207,14 +209,21 @@ function TotpAppRoot() {
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; padding: 0 2px;">
                 <h1 style="font-size: 1.1rem; margin: 0;">Vault</h1>
                 <div style="display: flex; gap: 4px;">
-                    <button onClick=${() => { isSettingsOpen.value = !isSettingsOpen.value; importError.value=''; rotationSuccessMessage.value=''; showImportPasswordPrompt.value=false; }} class="btn-secondary" style="font-size: 0.75rem; padding: 0 6px; height: 26px; width: auto;">
-                        ${isSettingsOpen.value ? "Close" : "Sync"}
+                    <button onClick=${() => {
+                        isSettingsOpen.value = !isSettingsOpen.value;
+                        importError.value = '';
+                        rotationSuccessMessage.value = '';
+                        showImportPasswordPrompt.value = false;
+                    }} class="btn-secondary" style="font-size: 0.75rem; padding: 0 6px; height: 26px; width: auto;">
+                        ${isSettingsOpen.value ? 'Close' : 'Sync'}
                     </button>
                     <button onClick=${() => location.reload()} style="font-size: 0.75rem; padding: 0 6px; height: 26px; width: auto;">Lock</button>
                 </div>
             </div>
 
-            ${isSettingsOpen.value ? html`
+            ${
+                isSettingsOpen.value
+                    ? html`
                 <div class="card" style="background: #fdfdfd; border: 1px solid #0066cc; padding: 8px; display: flex; flex-direction: column; gap: 10px;">
                     <div>
                         <h2 style="font-size: 0.9rem; margin-bottom: 4px;">Data Sync</h2>
@@ -227,23 +236,27 @@ function TotpAppRoot() {
                         </div>
                     </div>
 
-                    ${showImportPasswordPrompt.value ? html`
+                    ${
+                        showImportPasswordPrompt.value
+                            ? html`
                         <div style="background: #fff9db; padding: 6px; border-radius: 4px; border: 1px solid #f59f00;">
                             <span style="font-size: 0.75rem; font-weight:bold; color: #e67e22; display:block; margin-bottom:2px;">Passphrase Required:</span>
                             <form onSubmit=${handleImportPasswordSubmit} style="display: flex; flex-direction: row; gap: 4px;">
-                                <input type="password" value=${importBackupPassword} onInput=${e => importBackupPassword.value = e.target.value} placeholder="Password" style="height:26px; font-size:0.8rem; flex-grow:1;" />
+                                <input type="password" value=${importBackupPassword} onInput=${(e) => (importBackupPassword.value = e.target.value)} placeholder="Password" style="height:26px; font-size:0.8rem; flex-grow:1;" />
                                 <button type="submit" style="font-size: 0.75rem; height:26px; width:auto; padding: 0 8px;">Verify</button>
                             </form>
                         </div>
-                    ` : null}
+                    `
+                            : null
+                    }
 
                     <hr style="border: 0; border-top: 1px dashed #ddd; margin: 2px 0;" />
 
                     <div>
                         <h2 style="font-size: 0.9rem; margin-bottom: 4px;">Rotate Password</h2>
                         <form onSubmit=${handleRotatePasswordSubmit} style="gap: 4px;">
-                            <input type="password" value=${newMasterPassword} onInput=${e => newMasterPassword.value = e.target.value} placeholder="New Password" style="height:28px; font-size:0.8rem;" />
-                            <input type="password" value=${confirmMasterPassword} onInput=${e => confirmMasterPassword.value = e.target.value} placeholder="Confirm" style="height:28px; font-size:0.8rem;" />
+                            <input type="password" value=${newMasterPassword} onInput=${(e) => (newMasterPassword.value = e.target.value)} placeholder="New Password" style="height:28px; font-size:0.8rem;" />
+                            <input type="password" value=${confirmMasterPassword} onInput=${(e) => (confirmMasterPassword.value = e.target.value)} placeholder="Confirm" style="height:28px; font-size:0.8rem;" />
                             <button type="submit" style="font-size: 0.8rem; height: 28px;">Update Key</button>
                         </form>
                     </div>
@@ -251,20 +264,25 @@ function TotpAppRoot() {
                     ${importError.value ? html`<div style="color: #cc0000; font-size: 0.75rem; background: #fff5f5; padding: 4px;">${importError.value}</div>` : null}
                     ${rotationSuccessMessage.value ? html`<div style="color: #2b8a3e; font-size: 0.75rem; background: #ebfbee; padding: 4px;">${rotationSuccessMessage.value}</div>` : null}
                 </div>
-            ` : null}
+            `
+                    : null
+            }
 
             <div>
-                ${globalVault.value.length === 0 
-                    ? html`<div class="card" style="text-align: center; color: #777; padding: 16px; border-style: dashed; font-size: 0.85rem;">No credentials saved yet. Add keys below.</div>`
-                    : globalVault.value.map(item => html`<${TokenRow} key=${item.id} item=${item} />`)
+                ${
+                    globalVault.value.length === 0
+                        ? html`<div class="card" style="text-align: center; color: #777; padding: 16px; border-style: dashed; font-size: 0.85rem;">No credentials saved yet. Add keys below.</div>`
+                        : globalVault.value.map(
+                              (item) => html`<${TokenRow} key=${item.id} item=${item} />`
+                          )
                 }
             </div>
 
             <div class="card" style="margin-top: 4px;">
                 <h2 style="font-size: 0.9rem; margin-bottom: 4px;">Add New Account</h2>
                 <form onSubmit=${handleFormSubmit} style="gap: 4px;">
-                    <input type="text" placeholder="Label (e.g. GitHub)" value=${newLabel} onInput=${e => newLabel.value = e.target.value} style="height: 28px; font-size: 0.8rem;" />
-                    <input type="text" placeholder="Base32 Secret" value=${newSecret} onInput=${e => newSecret.value = e.target.value} autocomplete="off" autocapitalize="none" style="height: 28px; font-size: 0.8rem;" />
+                    <input type="text" placeholder="Label (e.g. GitHub)" value=${newLabel} onInput=${(e) => (newLabel.value = e.target.value)} style="height: 28px; font-size: 0.8rem;" />
+                    <input type="text" placeholder="Base32 Secret" value=${newSecret} onInput=${(e) => (newSecret.value = e.target.value)} autocomplete="off" autocapitalize="none" style="height: 28px; font-size: 0.8rem;" />
                     
                     ${formError.value ? html`<p style="color: #cc0000; font-size: 0.75rem; margin: 0;">${formError.value}</p>` : null}
                     <button type="submit" style="margin-top: 2px; height: 30px; font-size: 0.85rem;">Store Token</button>

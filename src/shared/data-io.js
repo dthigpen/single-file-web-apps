@@ -41,7 +41,7 @@ class AppDataIO extends HTMLElement {
                 version: this.version,
                 encrypted: this.isEncrypted,
                 cryptoMetadata: {},
-                payload: ""
+                payload: ''
             };
 
             if (this.isEncrypted && masterKey) {
@@ -54,7 +54,9 @@ class AppDataIO extends HTMLElement {
             }
 
             const timestamp = new Date().toISOString().split('T')[0];
-            const blob = new Blob([JSON.stringify(envelope, null, 2)], { type: 'application/json' });
+            const blob = new Blob([JSON.stringify(envelope, null, 2)], {
+                type: 'application/json'
+            });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
@@ -73,7 +75,7 @@ class AppDataIO extends HTMLElement {
                 try {
                     const envelope = JSON.parse(event.target.result);
                     if (!envelope || envelope.appId !== this.appId) {
-                        alert("Incompatible backup file: App ID mismatch.");
+                        alert('Incompatible backup file: App ID mismatch.');
                         return;
                     }
 
@@ -87,7 +89,7 @@ class AppDataIO extends HTMLElement {
 
                     if (envelope.encrypted) {
                         if (!activeKey) {
-                            activeKey = prompt("Enter the passphrase to decrypt this backup file:");
+                            activeKey = prompt('Enter the passphrase to decrypt this backup file:');
                             if (!activeKey) return;
                         }
                         const decryptedString = await decryptPayload(
@@ -101,11 +103,13 @@ class AppDataIO extends HTMLElement {
                         clearData = envelope.payload;
                     }
 
-                    this.dispatchEvent(new CustomEvent('app-import-success', {
-                        detail: { data: clearData }
-                    }));
+                    this.dispatchEvent(
+                        new CustomEvent('app-import-success', {
+                            detail: { data: clearData }
+                        })
+                    );
                 } catch (err) {
-                    alert("Import failed. The file passphrase does not match your active session.");
+                    alert('Import failed. The file passphrase does not match your active session.');
                 }
                 importPicker.value = '';
             };
@@ -114,7 +118,9 @@ class AppDataIO extends HTMLElement {
 
         // --- NUCLEAR WIPE PIPELINE ---
         resetBtn.onclick = () => {
-            const confirmWipe = confirm("Are you completely sure you want to wipe this application? This will permanently delete all local keys, database entries, and settings configurations.");
+            const confirmWipe = confirm(
+                'Are you completely sure you want to wipe this application? This will permanently delete all local keys, database entries, and settings configurations.'
+            );
             if (confirmWipe) {
                 localStorage.removeItem(this.appId);
                 // Force a page refresh to throw the user back to a clean sandbox slate

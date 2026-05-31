@@ -44,22 +44,31 @@ function QrScannerApp() {
 
                 <div style="font-size: 0.8rem; color: #666; margin-bottom: 8px;">Status: ${statusText}</div>
 
-                ${scanResult.value ? html`
+                ${
+                    scanResult.value
+                        ? html`
                     <div style="background: #ebfbee; border: 1px solid #2b8a3e; padding: 8px; border-radius: 4px; text-align: left; margin-top: 8px;">
                         <span style="font-size: 0.75rem; font-weight: bold; color: #2b8a3e; display: block; margin-bottom: 2px;">Decoded Payload Content:</span>
                         
-                        ${scanResult.value.startsWith('http') 
-                            ? html`<a href="${scanResult.value}" target="_blank" style="font-size: 0.85rem; font-weight: bold; word-break: break-all; color: #0066cc;">${scanResult.value}</a>`
-                            : html`<div style="font-family: monospace; font-size: 0.85rem; word-break: break-all;">${scanResult.value}</div>`
+                        ${
+                            scanResult.value.startsWith('http')
+                                ? html`<a href="${scanResult.value}" target="_blank" style="font-size: 0.85rem; font-weight: bold; word-break: break-all; color: #0066cc;">${scanResult.value}</a>`
+                                : html`<div style="font-family: monospace; font-size: 0.85rem; word-break: break-all;">${scanResult.value}</div>`
                         }
                     </div>
-                ` : null}
+                `
+                        : null
+                }
 
-                ${errLog.value ? html`
+                ${
+                    errLog.value
+                        ? html`
                     <div style="background: #fff5f5; border: 1px solid #ffd1d1; color: #cc0000; padding: 6px; border-radius: 4px; font-size: 0.8rem; margin-top: 8px; text-align: left;">
                         ❌ ${errLog.value}
                     </div>
-                ` : null}
+                `
+                        : null
+                }
             </div>
         </div>
     `;

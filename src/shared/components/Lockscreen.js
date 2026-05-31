@@ -23,7 +23,7 @@ export function Lockscreen({ appId, appName }) {
                 passwordAttempt.value = '';
             }
         } catch (err) {
-            errorMessage.value = err.message || "Invalid master passphrase.";
+            errorMessage.value = err.message || 'Invalid master passphrase.';
         } finally {
             isProcessing.value = false;
         }
@@ -33,7 +33,7 @@ export function Lockscreen({ appId, appName }) {
         <div class="app-workspace flex-container">
             <div class="card center-text">
                 <div style="font-size: 1.5rem; margin-bottom: 4px;"></div>
-                <h1>${appName || "Secure Vault"}</h1>
+                <h1>${appName || 'Secure Vault'}</h1>
                 <p>Enter your master passphrase to decrypt records.</p>
 
                 <form onSubmit=${handleUnlockSubmit}>
@@ -41,20 +41,24 @@ export function Lockscreen({ appId, appName }) {
                         type="password" 
                         placeholder="Master Passphrase" 
                         value=${passwordAttempt} 
-                        onInput=${e => passwordAttempt.value = e.target.value}
+                        onInput=${(e) => (passwordAttempt.value = e.target.value)}
                         disabled=${isProcessing.value}
                         style="text-align: center;"
                     />
                     <button type="submit" disabled=${isProcessing.value}>
-                        ${isProcessing.value ? "Decrypting..." : "Unlock Application"}
+                        ${isProcessing.value ? 'Decrypting...' : 'Unlock Application'}
                     </button>
                 </form>
 
-                ${errorMessage.value ? html`
+                ${
+                    errorMessage.value
+                        ? html`
                     <div style="margin-top: 8px; color: #cc0000; font-size: 0.8rem; background: #fff5f5; padding: 6px; border-radius: 4px; border: 1px solid #ffd1d1;">
                         ${errorMessage.value}
                     </div>
-                ` : null}
+                `
+                        : null
+                }
 
                 <div style="margin-top: 20px; padding-top: 10px; border-top: 1px dashed #eee;">
                     <button onClick=${factoryResetDatabase} style="background: none; color: #cc0000; font-size: 0.75rem; text-decoration: underline; padding: 4px; width: auto; height: auto; font-weight: normal;">

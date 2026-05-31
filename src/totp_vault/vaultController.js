@@ -16,14 +16,14 @@ effect(async () => {
         const envelope = await encryptPayload(rawString, masterKey.value);
         localStorage.setItem(STORAGE_KEY, JSON.stringify(envelope));
     } catch (err) {
-        console.error("Storage Engine write failure:", err);
+        console.error('Storage Engine write failure:', err);
     }
 });
 
 export function addCredential(rawLabel, secret) {
     if (!rawLabel || !secret) return;
     const cleanLabel = rawLabel.trim();
-    let issuer = "";
+    let issuer = '';
     let account = cleanLabel;
 
     if (cleanLabel.includes(':')) {
@@ -39,7 +39,7 @@ export function addCredential(rawLabel, secret) {
             label: cleanLabel,
             issuer: issuer,
             account: account,
-            secret: secret.trim().replace(/\s/g, ""),
+            secret: secret.trim().replace(/\s/g, ''),
             created: Date.now()
         }
     ];
@@ -49,7 +49,7 @@ export function addCredential(rawLabel, secret) {
 export function updateCredential(id, updatedLabel, updatedSecret) {
     if (!updatedLabel || !updatedSecret) return;
     const cleanLabel = updatedLabel.trim();
-    let issuer = "";
+    let issuer = '';
     let account = cleanLabel;
 
     if (cleanLabel.includes(':')) {
@@ -58,21 +58,21 @@ export function updateCredential(id, updatedLabel, updatedSecret) {
         account = parts.slice(1).join(':').trim();
     }
 
-    globalVault.value = globalVault.value.map(item => {
+    globalVault.value = globalVault.value.map((item) => {
         if (item.id !== id) return item;
         return {
             ...item,
             label: cleanLabel,
             issuer: issuer,
             account: account,
-            secret: updatedSecret.trim().replace(/\s/g, "")
+            secret: updatedSecret.trim().replace(/\s/g, '')
         };
     });
 }
 
 export function deleteCredential(id) {
-    if (confirm("Are you sure you want to delete this account configuration?")) {
-        globalVault.value = globalVault.value.filter(item => item.id !== id);
+    if (confirm('Are you sure you want to delete this account configuration?')) {
+        globalVault.value = globalVault.value.filter((item) => item.id !== id);
     }
 }
 
@@ -80,20 +80,20 @@ export function deleteCredential(id) {
 export function exportVaultFile() {
     const encryptedData = localStorage.getItem(STORAGE_KEY);
     if (!encryptedData) {
-        alert("No local data found to export yet. Add a token first!");
+        alert('No local data found to export yet. Add a token first!');
         return;
     }
 
     const blob = new Blob([encryptedData], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
-    
+
     const timestamp = new Date().toISOString().slice(0, 10);
     a.href = url;
     a.download = `totp-vault-backup-${timestamp}.json`;
     document.body.appendChild(a);
     a.click();
-    
+
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
 }
@@ -106,7 +106,7 @@ export async function importVaultFile(fileText, overridePassword = null) {
     try {
         const envelope = JSON.parse(fileText);
         if (!envelope.payload || !envelope.cryptoMetadata) {
-            throw new Error("Invalid file format.");
+            throw new Error('Invalid file format.');
         }
 
         // Determine which passphrase key to test against the cryptographic engine
@@ -120,10 +120,14 @@ export async function importVaultFile(fileText, overridePassword = null) {
         );
 
         const importedItems = JSON.parse(cleartext);
-        if (!Array.isArray(importedItems)) throw new Error("Internal payload error.");
+        if (!Array.isArray(importedItems)) throw new Error('Internal payload error.');
 
-        if (confirm(`Authenticated backup successfully! Found ${importedItems.length} accounts. Overwrite your current vault?`)) {
-            // Hydrate working memory loop. The background effect() will instantly 
+        if (
+            confirm(
+                `Authenticated backup successfully! Found ${importedItems.length} accounts. Overwrite your current vault?`
+            )
+        ) {
+            // Hydrate working memory loop. The background effect() will instantly
             // re-encrypt these imported records using the active session's master key!
             globalVault.value = importedItems;
             return { success: true };
@@ -134,7 +138,7 @@ export async function importVaultFile(fileText, overridePassword = null) {
         if (!overridePassword) {
             return { success: false, requiresPasswordOverride: true };
         }
-        throw new Error("Authentication failed. Wrong passphrase for this backup file.");
+        throw new Error('Authentication failed. Wrong passphrase for this backup file.');
     }
 }
 
@@ -142,19 +146,21 @@ export async function importVaultFile(fileText, overridePassword = null) {
  * Password Rotation: Re-encrypts the active database with a new passphrase
  */
 export async function rotateMasterPassphrase(newPassword) {
-    if (!newPassword || newPassword.trim() === "") {
-        throw new Error("New passphrase cannot be blank.");
+    if (!newPassword || newPassword.trim() === '') {
+        throw new Error('New passphrase cannot be blank.');
     }
-    
+
     // 1. Update the volatile state pointer key
     masterKey.value = newPassword;
-    
+
     // 2. Explicitly trigger a save loop sweep right now
     const rawString = JSON.stringify(globalVault.value);
     const envelope = await encryptPayload(rawString, masterKey.value);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(envelope));
-    
-    console.log("Cryptography: Master passphrase rotated and local storage records re-encrypted smoothly.");
+
+    console.log(
+        'Cryptography: Master passphrase rotated and local storage records re-encrypted smoothly.'
+    );
     return true;
 }
 
@@ -168,18 +174,27 @@ export async function tryUnlockVault(password) {
     }
     try {
         const envelope = JSON.parse(stored);
-        const cleartext = await decryptPayload(envelope.payload, password, envelope.cryptoMetadata.salt, envelope.cryptoMetadata.iv);
+        const cleartext = await decryptPayload(
+            envelope.payload,
+            password,
+            envelope.cryptoMetadata.salt,
+            envelope.cryptoMetadata.iv
+        );
         masterKey.value = password;
         globalVault.value = JSON.parse(cleartext);
         isUnlocked.value = true;
         return true;
     } catch (err) {
-        throw new Error("Invalid master passphrase. Integrity token mismatch.");
+        throw new Error('Invalid master passphrase. Integrity token mismatch.');
     }
 }
 
 export function factoryResetDatabase() {
-    if (confirm("CRITICAL WARNING: This will permanently delete your local encrypted vault. Proceed?")) {
+    if (
+        confirm(
+            'CRITICAL WARNING: This will permanently delete your local encrypted vault. Proceed?'
+        )
+    ) {
         localStorage.removeItem(STORAGE_KEY);
         location.reload();
     }

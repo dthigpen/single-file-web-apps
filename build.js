@@ -15,7 +15,7 @@ if (fs.existsSync(distDir)) {
 }
 fs.mkdirSync(distDir);
 
-const apps = fs.readdirSync(srcDir).filter(file => {
+const apps = fs.readdirSync(srcDir).filter((file) => {
     return fs.statSync(path.join(srcDir, file)).isDirectory() && file !== 'shared';
 });
 
@@ -23,7 +23,7 @@ console.log(`Starting vintage-compatible compilation for ${apps.length} apps...\
 
 for (const appName of apps) {
     console.log(`Building: ${appName}...`);
-    
+
     await build({
         root: path.resolve(__dirname, `src/${appName}`),
         configFile: false,
@@ -34,10 +34,13 @@ for (const appName of apps) {
             babel({
                 babelHelpers: 'bundled',
                 presets: [
-                    ['@babel/preset-env', {
-                        targets: 'chrome 80', // Strictly enforce 2020 browser syntax compatibility
-                        modules: false
-                    }]
+                    [
+                        '@babel/preset-env',
+                        {
+                            targets: 'chrome 80', // Strictly enforce 2020 browser syntax compatibility
+                            modules: false
+                        }
+                    ]
                 ],
                 // Ensure it sweeps through everything including node_modules if needed
                 compact: true
@@ -55,10 +58,10 @@ for (const appName of apps) {
         },
         logLevel: 'warn'
     });
-    
+
     const defaultOutputFile = path.join(distDir, 'index.html');
     const targetOutputFile = path.join(distDir, `${appName}.html`);
-    
+
     if (fs.existsSync(defaultOutputFile)) {
         fs.renameSync(defaultOutputFile, targetOutputFile);
         console.log(`Generated: dist/${appName}.html\n`);

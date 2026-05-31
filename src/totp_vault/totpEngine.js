@@ -3,27 +3,27 @@
  * Required because browser APIs do not natively support Base32 parsing.
  */
 function decodeBase32(base32Str) {
-    const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
+    const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
     // Clean up spaces, dashes, and padding common in copy-pasted keys
-    const cleanStr = base32Str.toUpperCase().replace(/[\s-]/g, "").replace(/=/g, "");
-    
+    const cleanStr = base32Str.toUpperCase().replace(/[\s-]/g, '').replace(/=/g, '');
+
     const length = cleanStr.length;
     const buffer = new Uint8Array(Math.floor((length * 5) / 8));
-    
+
     let bits = 0;
     let value = 0;
     let index = 0;
 
     for (let i = 0; i < length; i++) {
         const idx = alphabet.indexOf(cleanStr[i]);
-        if (idx === -1) throw new Error("Invalid character found in Base32 secret key.");
-        
+        if (idx === -1) throw new Error('Invalid character found in Base32 secret key.');
+
         value = (value << 5) | idx;
         bits += 5;
 
         if (bits >= 8) {
             bits -= 8;
-            buffer[index++] = (value >>> bits) & 0xFF;
+            buffer[index++] = (value >>> bits) & 0xff;
         }
     }
     return buffer;
@@ -47,34 +47,30 @@ export async function generateTOTP(secret) {
     const counterBuffer = new ArrayBuffer(8);
     const counterView = new DataView(counterBuffer);
     // Write lower 32-bits to the end, upper bits remain 0 for common Unix epoch ranges
-    counterView.setUint32(4, counter, false); 
+    counterView.setUint32(4, counter, false);
 
     // 4. Import the raw secret array into the Web Crypto API framework
     const cryptoKey = await crypto.subtle.importKey(
-        "raw",
+        'raw',
         secretBytes,
-        { name: "HMAC", hash: { name: "SHA-1" } },
+        { name: 'HMAC', hash: { name: 'SHA-1' } },
         false,
-        ["sign"]
+        ['sign']
     );
 
     // 5. Compute the HMAC-SHA1 hash signature value envelope
-    const signatureBuffer = await crypto.subtle.sign(
-        "HMAC",
-        cryptoKey,
-        counterBuffer
-    );
+    const signatureBuffer = await crypto.subtle.sign('HMAC', cryptoKey, counterBuffer);
     const hmacResult = new Uint8Array(signatureBuffer);
 
     // 6. Dynamic Truncation: Use the lower 4 bits of the last byte as an array index offset
-    const offset = hmacResult[hmacResult.length - 1] & 0x0F;
+    const offset = hmacResult[hmacResult.length - 1] & 0x0f;
 
     // Extract a 4-byte slice starting at that exact index offset
-    const binaryCode = 
-        ((hmacResult[offset] & 0x7F) << 24) |
-        ((hmacResult[offset + 1] & 0xFF) << 16) |
-        ((hmacResult[offset + 2] & 0xFF) << 8) |
-        (hmacResult[offset + 3] & 0xFF);
+    const binaryCode =
+        ((hmacResult[offset] & 0x7f) << 24) |
+        ((hmacResult[offset + 1] & 0xff) << 16) |
+        ((hmacResult[offset + 2] & 0xff) << 8) |
+        (hmacResult[offset + 3] & 0xff);
 
     // 7. Reduce the value down to a 6-digit integer and pad with leading zeros if necessary
     const otp = binaryCode % 1000000;

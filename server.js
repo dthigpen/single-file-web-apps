@@ -13,7 +13,11 @@ const server = http.createServer((req, res) => {
     const filePath = path.join(DIST_DIR, fileName);
 
     // Security check: Ensure the device isn't escaping the dist folder
-    if (!filePath.startsWith(DIST_DIR) || !fs.existsSync(filePath) || fs.statSync(filePath).isDirectory()) {
+    if (
+        !filePath.startsWith(DIST_DIR) ||
+        !fs.existsSync(filePath) ||
+        fs.statSync(filePath).isDirectory()
+    ) {
         res.writeHead(404, { 'Content-Type': 'text/plain' });
         return res.end('File not found inside distribution build.');
     }

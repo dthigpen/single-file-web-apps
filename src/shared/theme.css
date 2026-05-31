@@ -9,7 +9,7 @@
 body {
     margin: 0;
     padding: 0;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
     background-color: #ffffff; /* Match card background to feel native and full-bleed */
     color: #333;
 }
@@ -38,13 +38,13 @@ form {
     width: 100%;
 }
 
-h1 { 
-    font-size: 1.15rem; 
+h1 {
+    font-size: 1.15rem;
     margin: 0 0 4px 0;
 }
 
-h2 { 
-    font-size: 1.0rem; 
+h2 {
+    font-size: 1rem;
     margin: 0 0 6px 0;
 }
 
@@ -56,8 +56,8 @@ p {
 }
 
 /* Low-profile inputs and buttons to maximize vertical space */
-input[type="text"],
-input[type="password"] {
+input[type='text'],
+input[type='password'] {
     width: 100%;
     padding: 6px;
     border: 1px solid #ccc;
