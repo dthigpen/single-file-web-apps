@@ -108,7 +108,7 @@ class AppDataIO extends HTMLElement {
                             detail: { data: clearData }
                         })
                     );
-                } catch (err) {
+                } catch (_err) {
                     alert('Import failed. The file passphrase does not match your active session.');
                 }
                 importPicker.value = '';

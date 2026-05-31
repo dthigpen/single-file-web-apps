@@ -1,11 +1,11 @@
-import { h } from 'preact';
 import { useSignal } from '@preact/signals';
 import htm from 'htm';
-import { tryUnlockVault, factoryResetDatabase } from '../../totp_vault/vaultController.js';
+import { h } from 'preact';
+import { factoryResetDatabase, tryUnlockVault } from '../../totp_vault/vaultController.js';
 
 const html = htm.bind(h);
 
-export function Lockscreen({ appId, appName }) {
+export function Lockscreen({ appId: _appId, appName }) {
     const passwordAttempt = useSignal('');
     const errorMessage = useSignal('');
     const isProcessing = useSignal(false);

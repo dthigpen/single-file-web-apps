@@ -1,23 +1,21 @@
+import { useComputed, useSignal } from '@preact/signals';
+import htm from 'htm';
 import { h, render } from 'preact';
 import { useEffect } from 'preact/hooks';
-import { useSignal, useComputed } from '@preact/signals';
-import htm from 'htm';
-
-import {
-    isUnlocked,
-    globalVault,
-    addCredential,
-    updateCredential,
-    deleteCredential,
-    timeStepTicker,
-    exportVaultFile,
-    importVaultFile,
-    rotateMasterPassphrase,
-    factoryResetDatabase
-} from './vaultController.js';
-
 import { Lockscreen } from '../shared/components/Lockscreen.js';
 import { generateTOTP, getSecondsRemaining } from './totpEngine.js';
+import {
+    addCredential,
+    deleteCredential,
+    exportVaultFile,
+    factoryResetDatabase,
+    globalVault,
+    importVaultFile,
+    isUnlocked,
+    rotateMasterPassphrase,
+    timeStepTicker,
+    updateCredential
+} from './vaultController.js';
 
 const html = htm.bind(h);
 

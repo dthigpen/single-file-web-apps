@@ -32,7 +32,7 @@ export function decodeQrFromFile(fileItem) {
                         inversionAttempts: 'dontInvert'
                     });
 
-                    if (code && code.data) {
+                    if (code?.data) {
                         resolve(code.data);
                     } else {
                         reject(
@@ -42,7 +42,7 @@ export function decodeQrFromFile(fileItem) {
                         );
                     }
                 } catch (err) {
-                    reject(new Error('Image processing matrix failure: ' + err.message));
+                    reject(new Error(`Image processing matrix failure: ${err.message}`));
                 }
             };
             img.onerror = () =>
@@ -59,7 +59,7 @@ export function decodeQrFromFile(fileItem) {
  * Handles standard structures like: otpauth://totp/Issuer:Account?secret=BASE32SECRET
  */
 export function parseOtpAuthUri(uriString) {
-    if (!uriString || !uriString.toLowerCase().startsWith('otpauth://')) {
+    if (!uriString?.toLowerCase().startsWith('otpauth://')) {
         throw new Error('Scanned link is not a valid standard otpauth:// token configuration.');
     }
 
@@ -69,7 +69,7 @@ export function parseOtpAuthUri(uriString) {
         throw new Error('Missing Base32 secret structural key inside payload query strings.');
 
     // Clean up label formatting strings out of URL paths
-    let label = decodeURIComponent(url.pathname.replace(/^\/\/totp\//i, ''));
+    const label = decodeURIComponent(url.pathname.replace(/^\/\/totp\//i, ''));
 
     return {
         label: label || 'Imported Account',
@@ -116,7 +116,7 @@ export function parseUniversalTextImport(rawTextStream) {
                 'JSON structure parsed correctly, but found no matching TOTP data arrays.'
             );
         } catch (jsonErr) {
-            throw new Error('Malformed JSON format string block: ' + jsonErr.message);
+            throw new Error(`Malformed JSON format string block: ${jsonErr.message}`);
         }
     }
 
@@ -130,7 +130,7 @@ export function parseUniversalTextImport(rawTextStream) {
                     'Target link contains no valid Base32 secret data query parameter.'
                 );
 
-            let label = decodeURIComponent(url.pathname.replace(/^\/\/totp\//i, ''));
+            const label = decodeURIComponent(url.pathname.replace(/^\/\/totp\//i, ''));
             return [
                 {
                     label: label || 'Link Import',
@@ -138,7 +138,7 @@ export function parseUniversalTextImport(rawTextStream) {
                 }
             ];
         } catch (urlErr) {
-            throw new Error('Invalid otpauth specification URL template: ' + urlErr.message);
+            throw new Error(`Invalid otpauth specification URL template: ${urlErr.message}`);
         }
     }
 

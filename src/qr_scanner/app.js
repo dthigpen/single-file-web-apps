@@ -1,6 +1,6 @@
-import { h, render } from 'preact';
 import { useSignal } from '@preact/signals';
 import htm from 'htm';
+import { h, render } from 'preact';
 import { decodeQrFromFile } from '../shared/qrEngine.js';
 
 const html = htm.bind(h);

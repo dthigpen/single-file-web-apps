@@ -1,5 +1,5 @@
-import { signal, effect } from '@preact/signals';
-import { encryptPayload, decryptPayload } from '../shared/crypto.js';
+import { effect, signal } from '@preact/signals';
+import { decryptPayload, encryptPayload } from '../shared/crypto.js';
 
 const STORAGE_KEY = 'totp-vault-db';
 
@@ -133,7 +133,7 @@ export async function importVaultFile(fileText, overridePassword = null) {
             return { success: true };
         }
         return { success: false };
-    } catch (err) {
+    } catch (_err) {
         // If it failed and we haven't tried an explicit override password yet, signal to the UI to ask for one
         if (!overridePassword) {
             return { success: false, requiresPasswordOverride: true };
@@ -184,7 +184,7 @@ export async function tryUnlockVault(password) {
         globalVault.value = JSON.parse(cleartext);
         isUnlocked.value = true;
         return true;
-    } catch (err) {
+    } catch (_err) {
         throw new Error('Invalid master passphrase. Integrity token mismatch.');
     }
 }

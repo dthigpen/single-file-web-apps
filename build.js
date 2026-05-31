@@ -1,10 +1,10 @@
-import { build } from 'vite';
 import preact from '@preact/preset-vite';
-import { viteSingleFile } from 'vite-plugin-singlefile';
 import { babel } from '@rollup/plugin-babel'; // ◄ Import Babel
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { build } from 'vite';
+import { viteSingleFile } from 'vite-plugin-singlefile';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const srcDir = './src';

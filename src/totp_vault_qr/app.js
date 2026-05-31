@@ -1,27 +1,23 @@
+import { useComputed, useSignal } from '@preact/signals';
+import htm from 'htm';
 import { h, render } from 'preact';
 import { useEffect } from 'preact/hooks';
-import { useSignal, useComputed } from '@preact/signals';
-import htm from 'htm';
-
-// Import core logic foundations out of our original controller blueprint
-import {
-    isUnlocked,
-    globalVault,
-    addCredential,
-    updateCredential,
-    deleteCredential,
-    timeStepTicker,
-    exportVaultFile,
-    importVaultFile,
-    rotateMasterPassphrase,
-    factoryResetDatabase
-} from '../totp_vault/vaultController.js';
-
 import { Lockscreen } from '../shared/components/Lockscreen.js';
-import { generateTOTP, getSecondsRemaining } from '../totp_vault/totpEngine.js';
-
 // 🧪 Bring in our newly forged shared QR and Text ingestion pipeline mechanics
 import { decodeQrFromFile, parseUniversalTextImport } from '../shared/qrEngine.js';
+import { generateTOTP, getSecondsRemaining } from '../totp_vault/totpEngine.js';
+// Import core logic foundations out of our original controller blueprint
+import {
+    addCredential,
+    deleteCredential,
+    exportVaultFile,
+    factoryResetDatabase,
+    globalVault,
+    importVaultFile,
+    isUnlocked,
+    timeStepTicker,
+    updateCredential
+} from '../totp_vault/vaultController.js';
 
 const html = htm.bind(h);
 
