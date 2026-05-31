@@ -70,3 +70,64 @@ export function parseOtpAuthUri(uriString) {
         secret: secret.trim()
     };
 }
+
+/**
+ * 🗺️ Universal Text Stream Import Parser
+ * Identifies and processes either a single otpauth:// URI or a raw plaintext Aegis JSON string.
+ * @param {string} rawTextStream - The loose clipboard or file text payload entered by the user.
+ * @returns {Array<{label: string, secret: string}>} Array of normalized credential items ready for structural insertion.
+ */
+export function parseUniversalTextImport(rawTextStream) {
+    const trimmed = rawTextStream.trim();
+    if (!trimmed) throw new Error("Input string stream is empty.");
+
+    // Case 1: Detect a bulk JSON vault backup file structure (e.g., Aegis Plaintext Export)
+    if (trimmed.startsWith('{') && trimmed.endsWith('}')) {
+        try {
+            const parsedJson = JSON.parse(trimmed);
+            
+            // Map structural compatibility format for Aegis JSON exports
+            if (parsedJson.entries && Array.isArray(parsedJson.entries)) {
+                return parsedJson.entries
+                    .filter(entry => entry.type === 'totp' && entry.info && entry.info.secret)
+                    .map(entry => ({
+                        label: entry.name || entry.issuer || "Aegis Import",
+                        secret: entry.info.secret.replace(/\s+/g, '').toUpperCase()
+                    }));
+            }
+            
+            // Map fallback format if the user pastes a raw array block instead
+            if (Array.isArray(parsedJson)) {
+                return parsedJson
+                    .filter(item => item.secret)
+                    .map(item => ({
+                        label: item.label || "JSON Import",
+                        secret: item.secret.replace(/\s+/g, '').toUpperCase()
+                    }));
+            }
+            
+            throw new Error("JSON structure parsed correctly, but found no matching TOTP data arrays.");
+        } catch (jsonErr) {
+            throw new Error("Malformed JSON format string block: " + jsonErr.message);
+        }
+    }
+
+    // Case 2: Detect a single standard account otpauth link profile
+    if (trimmed.toLowerCase().startsWith('otpauth://')) {
+        try {
+            const url = new URL(trimmed);
+            const secret = url.searchParams.get('secret');
+            if (!secret) throw new Error("Target link contains no valid Base32 secret data query parameter.");
+            
+            let label = decodeURIComponent(url.pathname.replace(/^\/\/totp\//i, ''));
+            return [{
+                label: label || "Link Import",
+                secret: secret.replace(/\s+/g, '').toUpperCase()
+            }];
+        } catch (urlErr) {
+            throw new Error("Invalid otpauth specification URL template: " + urlErr.message);
+        }
+    }
+
+    throw new Error("Unrecognized raw format. Supply a valid otpauth:// link or a plaintext Aegis vault JSON array dump.");
+}
