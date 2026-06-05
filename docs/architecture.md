@@ -1,84 +1,68 @@
-# Architecture & System Design
+# System Architecture & Design Baselines
 
-This project follows a **local-only, single-file application model**. There are no databases to maintain, no servers to configure, and no cloud backends tracking your data. The browser itself is the entire operating system boundary.
+This document outlines the core security, state preservation, and execution models enforced across the Single-File Application Suite. These standards ensure every standalone utility remains auditable, highly portable, and mathematically secure against data exposure.
 
 ---
 
-## The Data Lifecycle
+## The Zero-Knowledge Cryptographic Model
 
-Data in this ecosystem flows between an active, unencrypted state in memory and two distinct, encrypted persistent states on disk.
+For standalone utilities that require data persistence (such as the Encrypted TOTP Vault), security is handled strictly within the client-side runtime layer using the native browser **Web Crypto API**. No plain text information ever touches the disk or network.
+
+### 1. Key Derivation (PBKDF2)
+When you submit your master passphrase, the application does not store or check it against a hardcoded string. Instead, it feeds the password into a hardware-accelerated Password-Based Key Derivation Function 2 (PBKDF2).
+* **Salt:** A cryptographically secure random value generated via `crypto.getRandomValues()` and bound permanently to the individual device's local storage block.
+* **Iterations:** 600,000 rounds of SHA-256 processing. This high computational cost protects against automated local brute-force attacks if a raw backup file is intercepted.
+* **Output:** A 256-bit symmetric encryption key.
+
+### 2. Symmetric Encryption (AES-GCM)
+The derived key is loaded into transient memory as a CryptoKey object. When storing or exporting records, data is encrypted via **AES-GCM (Advanced Encryption Standard - Galois/Counter Mode)** with a 256-bit key length.
+* **Initialization Vector (IV):** A unique, non-repeating 12-byte random nonce is generated for every single write event.
+* **Integrity Authentication:** AES-GCM appends an authentication tag to the cipher text. This ensures that if a malicious script or corrupted storage stream alters even a single bit of your encrypted data, decryption will fail completely rather than loading compromised data.
+
+---
+
+## State Lifecycle & Runtime Flow
+
+The diagram below details the operational boundaries of data within the browser window environment:
 
 ```text
-                  ┌──────────────────────────────────┐
-                  │       Browser Runtime RAM        │
-                  │ (Decrypted Plaintext JSON) │
-                  └────────────────┬─────────────────┘
-                                   │
-                      Master Passphrase Encryption
-                                   │
-                                   ▼
-         ================ Encrypted Storage Boundary ================
-                                   │
-                  ┌────────────────┴────────────────┐
-                  ▼                                 ▼
-       ┌─────────────────────┐           ┌─────────────────────┐
-       │    Local Storage    │           │ Physical File System│
-       │ (Browser Persistent)│           │ (Secure File Backup)│
-       └──────────┬──────────┘           └─────────────────────┘
-                  │
-            Device Clear
-          (Browser Wipe)
-                  │
-                  ▼
-          [ Data Cleared ]
+ ┌────────────────────────────────────────────────────────┐
+ │                   Web Browser Window                   │
+ │                                                        │
+ │  ┌─────────────────┐             ┌──────────────────┐  │
+ │  │                 │ Decrypts to │                  │  │
+ │  │  Encrypted State│────────────>│  Transient RAM   │  │
+ │  │  (IndexedDB)    │             │  (Preact State)  │  │
+ │  │                 │<────────────│                  │  │
+ │  └─────────────────┘ Encrypts on └──────────────────┘  │
+ │                        Mutation                        │
+ └──────────────────────────┬─────────────────────────────┘
+                            │ Export File Action
+                            ▼
+                    ┌───────────────┐
+                    │ Downloaded    │
+                    │ Encrypted     │
+                    │ JSON Backup   │
+                    └───────────────┘
 ```
 
-### 1. Working Data (Local Storage)
-Primary working data lives in the browser's `localStorage` or `IndexedDB`. This allows the app to remember your dataset across page refreshes. To ensure security at rest, it is never saved as plaintext; it sits on your device's disk as a sealed AES-GCM encrypted string block.
-
-### 2. Encryption Process
-When you save or update your data, your master passphrase seals the database in-memory before it ever touches your storage drive. The data flows through this pipeline:
-
-```text
-[ User Master Passphrase ]
-            │
-            ▼
-   [ PBKDF2-HMAC-SHA256 ] ──► (100,000 Iterations, 16-Byte Random Salt)
-            │
-            ▼
-   [ Derived 256-Bit Key ]
-            │
-            ▼
-    [ AES-GCM-256 Bit ]   ──► (12-Byte Unique Nonce / IV)
-            │
-            ▼
- [ Final Base64 Encrypted String ] ──► Written to localStorage
-```
-
-### 3. Persistent Data (File System Exports)
-Because browser local storage is managed by the operating system, it is fundamentally volatile. If your device runs incredibly low on disk space, or if you clear your browser app cache, the browser may evict your local storage.
-
-To prevent data loss, permanent records rely on you manually exporting that same encrypted Base64 block out to a physical file (like a `.txt` or .`json` file) stored securely on your device's hard drive or MicroSD card.
+* **Transient Workspace Memory:** Once decrypted, credentials exist strictly as reactive Preact signals in transient browser memory (RAM). Locking the application or refreshing the tab flushes this memory array instantly.
+* **Encrypted Cold Storage:** The only thing committed to the browser's persistent database layer (`IndexedDB`) or an exported file configuration is the composite cryptographic payload payload: `{ ciphertext, iv, salt }`.
 
 ---
 
-## Core Constraints & Limitations
+## Hosted HTTPS vs. Local `file://` Contexts
 
-Operating strictly out of a single file wrapper without a traditional server backend introduces a few specific compromises you need to design around:
+This suite is explicitly architected to adapt seamlessly to two fundamentally different browser execution contexts:
 
-### 1. The Key-Management Burden
-Because there is no backend server to securely inject hidden environment variables or API secrets, apps that talk to external web services (like mapping or weather tools) require you to bring your own API key (BYOK). These keys must be input via the UI and stored safely in your encrypted application state.
+| Operational Feature | Hosted Context (`https://`) | Local Context (`file://`) |
+| :--- | :--- | :--- |
+| **Data Privacy** | 100% Client-Side (No data sent to host) | 100% Client-Side (Completely air-gapped) |
+| **Web Crypto Availability** | **Fully Enabled** (Secure Origin Requirement) | **Enabled** (Modern browsers treat local files as safe) |
+| **Advanced APIs (e.g. Geolocation)** | **Allowed** via native permission handshakes | **Auto-Denied** by browser security sandbox |
+| **Offline Performance** | Reliant on initial load or Service Workers | Instant execution from internal disk sectors |
 
-### 2. Browser Storage Eviction
-Modern mobile browsers and feature-phone web views will occasionally purge `localStorage` data if the device runs incredibly low on disk space, or if the browser app cache is cleared. 
-* **The Mitigation:** You cannot rely on the browser for permanent, multi-year storage. You **must** periodically use the app's export features to save an encrypted backup file to physical storage.
+### Why Hosting Matters
+While these applications can run straight from a local file download, modern browser security models enforce strict "Secure Origin" policies. Advanced hardware components—such as GPS coordinates for mapping utilities, camera context captures, or persistent service workers—are auto-blocked when executed under a standard local `file://` prefix. 
 
----
-
-## UI & Accessibility Guidelines
-
-To make sure these tools remain highly usable on any hardware profile, whether it's a desktop monitor, an e-ink dashboard, or a compact phone webview:
-
-* **Uncomplicated Layouts:** Focus on single-column, highly responsive structures. Avoid deep menus or overlapping UI windows.
-* **Visible Focus States:** Because mouse pointers on feature phones can sometimes be finicky or slow to navigate, interactive items must feature distinct outline highlights (`:focus` and `:focus-within`) so you always know exactly what element is selected.
-* **File Readers Over Clipboards:** Clipboard access is highly sandboxed and unreliable on feature phones. Always provide an explicit file loader (`<input type="file">`) rather than forcing yourself to copy and paste massive text strings.
+Serving this suite via static HTTPS portals (like GitHub Pages) unlocks full device capabilities while maintaining absolute local data privacy, as the server merely delivers the static asset string and takes zero part in processing your data.

@@ -9,17 +9,25 @@ import { viteSingleFile } from 'vite-plugin-singlefile';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const srcDir = './src';
 
+// dist/ is local compiled artifacts dir
+// docs/downloads is for docs deployment
 const distDir = path.resolve(__dirname, 'dist');
-if (fs.existsSync(distDir)) {
-    fs.rmSync(distDir, { recursive: true, force: true });
+const docsDownloadDir = path.resolve(__dirname, 'docs/downloads');
+
+// Clean out directories first
+for (const outDir of [distDir, docsDownloadDir]) {
+    if (fs.existsSync(outDir)) {
+        fs.rmSync(outDir, { recursive: true, force: true });
+    }
+    fs.mkdirSync(outDir);
 }
-fs.mkdirSync(distDir);
+
 
 const apps = fs.readdirSync(srcDir).filter((file) => {
     return fs.statSync(path.join(srcDir, file)).isDirectory() && file !== 'shared';
 });
 
-console.log(`Starting vintage-compatible compilation for ${apps.length} apps...\n`);
+console.log(`Starting compilation for ${apps.length} apps...\n`);
 
 for (const appName of apps) {
     console.log(`Building: ${appName}...`);
@@ -69,3 +77,10 @@ for (const appName of apps) {
 }
 
 console.log('All standalone applications built successfully!');
+
+// Copy compiled single-file HTML variants over to the docs assets block
+const builtFiles = fs.readdirSync(distDir).filter(file => file.endsWith('.html'));
+for (const file of builtFiles) {
+    fs.copyFileSync(path.join(distDir, file), path.join(docsDownloadDir, file));
+    console.log(`Copied ${file} to docs/downloads/ for static deployment.`);
+}

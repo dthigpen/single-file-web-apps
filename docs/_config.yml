@@ -1,0 +1,7 @@
+title: Single File Web APps
+description: Secure, local-first micro-apps optimized for ultra-low-spec device browsers.
+theme: jekyll-theme-cayman # A clean, responsive, mobile-friendly classic theme
+
+# Important: Prevents Jekyll from breaking or ignoring specific directory structures
+include:
+  - downloads
